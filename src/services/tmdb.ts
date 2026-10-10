@@ -152,76 +152,94 @@ export async function getLiveStreamingRows(region: string = 'Pakistan'): Promise
 
   try {
     const [
-      featuredData,
       top10Data,
-      trendingData,
+      featuredData,
       topTvData,
-      recentTvData,
       comedyData,
+      mysteryData,
       topMoviesData,
+      horrorData,
     ] = await Promise.all([
-      fetchTmdb('/trending/all/day'),
       fetchTmdb('/movie/popular', regCode ? { region: regCode } : {}),
-      fetchTmdb('/trending/all/week'),
+      fetchTmdb('/trending/all/day'),
       fetchTmdb('/tv/top_rated'),
-      fetchTmdb('/tv/on_the_air'),
-      fetchTmdb('/discover/movie', { with_genres: '35', sort_by: 'popularity.desc' }),
+      fetchTmdb('/discover/tv', { with_genres: '35', sort_by: 'popularity.desc' }),
+      fetchTmdb('/discover/tv', { with_genres: '9648,80,53', sort_by: 'popularity.desc' }),
       fetchTmdb('/movie/top_rated'),
+      fetchTmdb('/discover/movie', { with_genres: '27,53', sort_by: 'popularity.desc' }),
     ]);
 
-    const featuredItems = (featuredData.results || [])
-      .filter((i: any) => i.backdrop_path)
-      .slice(0, 10)
-      .map((i: any) => formatTmdbItem(i, undefined, undefined, 'NEW SEASON'));
-
     const top10Items = (top10Data.results || [])
-      .filter((i: any) => i.backdrop_path)
+      .filter((i: any) => i.backdrop_path || i.poster_path)
       .slice(0, 10)
-      .map((i: any, idx: number) => formatTmdbItem(i, 'movie', idx + 1, 'TOP 10'));
+      .map((i: any, idx: number) => {
+        const topBadges: BadgeType[] = ['NEW MOVIE', 'NEW SEASON', 'NEW SERIES', 'NEW SERIES'];
+        return formatTmdbItem(
+          i,
+          'movie',
+          idx + 1,
+          topBadges[idx % topBadges.length] || 'TOP 10'
+        );
+      });
 
-    const trendingItems = (trendingData.results || [])
-      .filter((i: any) => i.backdrop_path)
-      .slice(0, 10)
-      .map((i: any) => formatTmdbItem(i));
+    const featuredItems = (featuredData.results || [])
+      .filter((i: any) => i.poster_path || i.backdrop_path)
+      .slice(0, 12)
+      .map((i: any, idx: number) => {
+        const badges: BadgeType[] = [
+          'NEW SEASON',
+          'NEW SERIES',
+          'RECENTLY ADDED',
+          'NEW SERIES',
+          'SERIES PREMIERE',
+          'MOST LIKED',
+        ];
+        return formatTmdbItem(i, undefined, undefined, badges[idx % badges.length]);
+      });
 
     const topTvItems = (topTvData.results || [])
       .filter((i: any) => i.backdrop_path)
       .slice(0, 10)
-      .map((i: any) => formatTmdbItem(i, 'tv', undefined, 'NEW SERIES'));
-
-    const recentTvItems = (recentTvData.results || [])
-      .filter((i: any) => i.backdrop_path)
-      .slice(0, 10)
-      .map((i: any) => formatTmdbItem(i, 'tv', undefined, 'RECENTLY ADDED'));
+      .map((i: any, idx: number) =>
+        formatTmdbItem(i, 'tv', undefined, idx < 2 ? 'NEW SERIES' : undefined)
+      );
 
     const comedyItems = (comedyData.results || [])
       .filter((i: any) => i.backdrop_path)
       .slice(0, 10)
-      .map((i: any) => formatTmdbItem(i, 'movie', undefined, 'MOST LIKED'));
+      .map((i: any) => formatTmdbItem(i, 'tv'));
+
+    const mysteryItems = (mysteryData.results || [])
+      .filter((i: any) => i.backdrop_path)
+      .slice(0, 10)
+      .map((i: any) => formatTmdbItem(i, 'tv'));
 
     const topMoviesItems = (topMoviesData.results || [])
       .filter((i: any) => i.backdrop_path)
       .slice(0, 10)
-      .map((i: any) => formatTmdbItem(i, 'movie', undefined, 'NEW MOVIE'));
+      .map((i: any, idx: number) =>
+        formatTmdbItem(i, 'movie', undefined, idx < 3 ? 'NEW MOVIE' : undefined)
+      );
+
+    const horrorItems = (horrorData.results || [])
+      .filter((i: any) => i.backdrop_path)
+      .slice(0, 10)
+      .map((i: any) => formatTmdbItem(i, 'movie'));
 
     return [
+      {
+        id: 'top-10',
+        title: 'Top 10 in Pakistan',
+        isTop10: true,
+        region: 'Pakistan',
+        items: top10Items,
+      },
       {
         id: 'featured-originals',
         title: 'Featured Originals and Exclusives',
         seeMoreLink: '/movies',
+        cardLayout: 'portrait',
         items: featuredItems,
-      },
-      {
-        id: 'top-10',
-        title: 'Top 10 Today',
-        isTop10: true,
-        region,
-        items: top10Items,
-      },
-      {
-        id: 'trending-now',
-        title: 'Trending now',
-        items: trendingItems,
       },
       {
         id: 'top-tv',
@@ -230,22 +248,28 @@ export async function getLiveStreamingRows(region: string = 'Pakistan'): Promise
         items: topTvItems,
       },
       {
-        id: 'recently-added-tv',
-        title: 'Recently added TV',
+        id: 'comedy-tv',
+        title: 'Comedy TV',
         seeMoreLink: '/tv',
-        items: recentTvItems,
+        items: comedyItems,
       },
       {
-        id: 'comedy-movies',
-        title: 'Comedy movies',
-        seeMoreLink: '/movies',
-        items: comedyItems,
+        id: 'mystery-thriller-tv',
+        title: 'Mystery and thriller TV',
+        seeMoreLink: '/tv',
+        items: mysteryItems,
       },
       {
         id: 'top-movies',
         title: 'Top movies',
         seeMoreLink: '/movies',
         items: topMoviesItems,
+      },
+      {
+        id: 'horror-tv',
+        title: 'Horror TV',
+        seeMoreLink: '/tv',
+        items: horrorItems,
       },
     ];
   } catch (error) {

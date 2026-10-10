@@ -13,7 +13,8 @@ import { useWatchlist } from '@/context/WatchlistContext';
 
 export default function ToggleBoxHomePage() {
   const router = useRouter();
-  const { watchlist, toggleWatchlist, toastMessage, triggerToast } = useWatchlist();
+  const { watchlist, savedItems, toggleWatchlist, toastMessage, triggerToast, watchProgress } =
+    useWatchlist();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<MediaItem[]>([]);
@@ -64,6 +65,20 @@ export default function ToggleBoxHomePage() {
     return () => clearTimeout(timeout);
   }, [searchQuery]);
 
+  // Continue watching row
+  const continueWatchingItems = useMemo(() => {
+    const pool = [...savedItems, ...rows.flatMap((r) => r.items)];
+    const seen = new Set<string>();
+    const res: MediaItem[] = [];
+    for (const item of pool) {
+      if (!seen.has(item.id) && (watchProgress[item.id] || 0) > 0) {
+        seen.add(item.id);
+        res.push(item);
+      }
+    }
+    return res;
+  }, [savedItems, rows, watchProgress]);
+
   // Filtered rows for rendering
   const displayedRows = useMemo(() => {
     if (searchQuery.trim()) {
@@ -76,12 +91,21 @@ export default function ToggleBoxHomePage() {
       ];
     }
 
-    if (!expandedRows && rows.length > 5) {
-      return rows.slice(0, 5);
+    const baseRows = !expandedRows && rows.length > 5 ? rows.slice(0, 5) : rows;
+
+    if (continueWatchingItems.length > 0) {
+      return [
+        {
+          id: 'continue-watching',
+          title: 'Continue Watching',
+          items: continueWatchingItems,
+        },
+        ...baseRows,
+      ];
     }
 
-    return rows;
-  }, [searchQuery, searchResults, rows, expandedRows]);
+    return baseRows;
+  }, [searchQuery, searchResults, rows, expandedRows, continueWatchingItems]);
 
   return (
     <div className="toggle-box-app">

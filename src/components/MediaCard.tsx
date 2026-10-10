@@ -17,6 +17,7 @@ interface MediaCardProps {
   isInWatchlist: boolean;
   onToggleWatchlist: (item: MediaItem) => void;
   onSelect: (item: MediaItem) => void;
+  watchProgress?: number;
 }
 
 export const MediaCard: React.FC<MediaCardProps> = ({
@@ -25,12 +26,14 @@ export const MediaCard: React.FC<MediaCardProps> = ({
   isInWatchlist,
   onToggleWatchlist,
   onSelect,
+  watchProgress,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [imgError, setImgError] = useState(false);
 
-  const displayImage = item.backdropUrl || item.posterUrl || '';
+  // Portrait cards: prefer poster, fall back to backdrop
+  const displayImage = item.posterUrl || item.backdropUrl || '';
 
   const handleCardClick = () => {
     onSelect(item);
@@ -189,6 +192,16 @@ export const MediaCard: React.FC<MediaCardProps> = ({
               <div className="card-genres-line">{item.genre.slice(0, 3).join(' • ')}</div>
             )}
           </div>
+
+          {/* Playback progress bar for continue watching */}
+          {watchProgress !== undefined && watchProgress > 0 && (
+            <div className="card-progress-bar-wrap" title={`${watchProgress}% watched`}>
+              <div
+                className="card-progress-bar-fill"
+                style={{ width: `${Math.min(100, Math.max(4, watchProgress))}%` }}
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>

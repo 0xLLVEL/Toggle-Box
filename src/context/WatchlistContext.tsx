@@ -12,6 +12,9 @@ interface WatchlistContextType {
   triggerToast: (msg: string) => void;
   selectedMedia: MediaItem | null;
   setSelectedMedia: (item: MediaItem | null) => void;
+  watchProgress: Record<string, number>;
+  updateWatchProgress: (id: string, percent: number) => void;
+  clearWatchlist: () => void;
 }
 
 const WatchlistContext = createContext<WatchlistContextType | undefined>(undefined);
@@ -21,14 +24,29 @@ export const WatchlistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [savedItems, setSavedItems] = useState<MediaItem[]>([]);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [selectedMedia, setSelectedMedia] = useState<MediaItem | null>(null);
+  const [watchProgress, setWatchProgress] = useState<Record<string, number>>({});
 
   // Load from localStorage on mount
   useEffect(() => {
     try {
       const stored = localStorage.getItem('togglebox_watchlist');
       const storedItems = localStorage.getItem('togglebox_saved_items');
+      const storedProgress = localStorage.getItem('togglebox_watch_progress');
+
       if (stored) setWatchlist(JSON.parse(stored));
       if (storedItems) setSavedItems(JSON.parse(storedItems));
+      if (storedProgress) {
+        setWatchProgress(JSON.parse(storedProgress));
+      } else {
+        // Initialize default mock progress for popular titles
+        const initial = {
+          'the-boys': 68,
+          fallout: 45,
+          oppenheimer: 82,
+        };
+        setWatchProgress(initial);
+        localStorage.setItem('togglebox_watch_progress', JSON.stringify(initial));
+      }
     } catch {
       // Ignore storage errors
     }
@@ -39,6 +57,30 @@ export const WatchlistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setTimeout(() => {
       setToastMessage((curr) => (curr === msg ? null : curr));
     }, 2800);
+  };
+
+  const updateWatchProgress = (id: string, percent: number) => {
+    setWatchProgress((prev) => {
+      const updated = { ...prev, [id]: Math.min(100, Math.max(0, percent)) };
+      try {
+        localStorage.setItem('togglebox_watch_progress', JSON.stringify(updated));
+      } catch {
+        // Ignore
+      }
+      return updated;
+    });
+  };
+
+  const clearWatchlist = () => {
+    setWatchlist([]);
+    setSavedItems([]);
+    try {
+      localStorage.removeItem('togglebox_watchlist');
+      localStorage.removeItem('togglebox_saved_items');
+    } catch {
+      // Ignore
+    }
+    triggerToast('Watchlist cleared');
   };
 
   const toggleWatchlist = (item: MediaItem) => {
@@ -80,6 +122,9 @@ export const WatchlistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         triggerToast,
         selectedMedia,
         setSelectedMedia,
+        watchProgress,
+        updateWatchProgress,
+        clearWatchlist,
       }}
     >
       {children}

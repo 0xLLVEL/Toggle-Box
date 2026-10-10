@@ -159,6 +159,14 @@ export async function getLiveStreamingRows(region: string = 'Pakistan'): Promise
       mysteryData,
       topMoviesData,
       horrorData,
+      actionTvData,
+      dramaData,
+      romanceData,
+      awardData,
+      scifiData,
+      crimeData,
+      kidsData,
+      animeData,
     ] = await Promise.all([
       fetchTmdb('/movie/popular', regCode ? { region: regCode } : {}),
       fetchTmdb('/trending/all/day'),
@@ -167,6 +175,14 @@ export async function getLiveStreamingRows(region: string = 'Pakistan'): Promise
       fetchTmdb('/discover/tv', { with_genres: '9648,80,53', sort_by: 'popularity.desc' }),
       fetchTmdb('/movie/top_rated'),
       fetchTmdb('/discover/movie', { with_genres: '27,53', sort_by: 'popularity.desc' }),
+      fetchTmdb('/discover/tv', { with_genres: '10759', sort_by: 'popularity.desc' }),
+      fetchTmdb('/discover/tv', { with_genres: '18', sort_by: 'popularity.desc' }),
+      fetchTmdb('/discover/movie', { with_genres: '10749,18', sort_by: 'popularity.desc' }),
+      fetchTmdb('/discover/movie', { with_genres: '18,36', sort_by: 'vote_average.desc', 'vote_count.gte': '500' }),
+      fetchTmdb('/discover/movie', { with_genres: '878,14', sort_by: 'popularity.desc' }),
+      fetchTmdb('/discover/movie', { with_genres: '80,53', sort_by: 'popularity.desc' }),
+      fetchTmdb('/discover/movie', { with_genres: '10751,16', sort_by: 'popularity.desc' }),
+      fetchTmdb('/discover/tv', { with_genres: '16', sort_by: 'popularity.desc' }),
     ]);
 
     const top10Items = (top10Data.results || [])
@@ -199,39 +215,86 @@ export async function getLiveStreamingRows(region: string = 'Pakistan'): Promise
 
     const topTvItems = (topTvData.results || [])
       .filter((i: any) => i.backdrop_path)
-      .slice(0, 10)
+      .slice(0, 12)
       .map((i: any, idx: number) =>
         formatTmdbItem(i, 'tv', undefined, idx < 2 ? 'NEW SERIES' : undefined)
       );
 
     const comedyItems = (comedyData.results || [])
       .filter((i: any) => i.backdrop_path)
-      .slice(0, 10)
+      .slice(0, 12)
       .map((i: any) => formatTmdbItem(i, 'tv'));
 
     const mysteryItems = (mysteryData.results || [])
       .filter((i: any) => i.backdrop_path)
-      .slice(0, 10)
+      .slice(0, 12)
       .map((i: any) => formatTmdbItem(i, 'tv'));
 
     const topMoviesItems = (topMoviesData.results || [])
       .filter((i: any) => i.backdrop_path)
-      .slice(0, 10)
+      .slice(0, 12)
       .map((i: any, idx: number) =>
-        formatTmdbItem(i, 'movie', undefined, idx < 3 ? 'NEW MOVIE' : undefined)
+        formatTmdbItem(i, 'movie', undefined, idx < 4 ? 'NEW MOVIE' : undefined)
       );
 
     const horrorItems = (horrorData.results || [])
       .filter((i: any) => i.backdrop_path)
-      .slice(0, 10)
+      .slice(0, 12)
+      .map((i: any) => formatTmdbItem(i, 'tv'));
+
+    const actionTvItems = (actionTvData.results || [])
+      .filter((i: any) => i.backdrop_path)
+      .slice(0, 12)
+      .map((i: any, idx: number) =>
+        formatTmdbItem(i, 'tv', undefined, idx < 2 ? 'NEW SERIES' : undefined)
+      );
+
+    const dramaItems = (dramaData.results || [])
+      .filter((i: any) => i.backdrop_path)
+      .slice(0, 12)
+      .map((i: any) => formatTmdbItem(i, 'tv'));
+
+    const romanceItems = (romanceData.results || [])
+      .filter((i: any) => i.backdrop_path)
+      .slice(0, 12)
+      .map((i: any, idx: number) =>
+        formatTmdbItem(i, 'movie', undefined, idx < 2 ? 'NEW MOVIE' : undefined)
+      );
+
+    const awardItems = (awardData.results || [])
+      .filter((i: any) => i.backdrop_path)
+      .slice(0, 12)
+      .map((i: any) => formatTmdbItem(i, 'movie', undefined, 'MOST LIKED'));
+
+    const scifiItems = (scifiData.results || [])
+      .filter((i: any) => i.backdrop_path)
+      .slice(0, 12)
       .map((i: any) => formatTmdbItem(i, 'movie'));
+
+    const crimeItems = (crimeData.results || [])
+      .filter((i: any) => i.backdrop_path)
+      .slice(0, 12)
+      .map((i: any) => formatTmdbItem(i, 'movie', undefined, 'NEW MOVIE'));
+
+    const kidsItems = (kidsData.results || [])
+      .filter((i: any) => i.backdrop_path)
+      .slice(0, 12)
+      .map((i: any) => formatTmdbItem(i, 'movie'));
+
+    const animeItems = (animeData.results || [])
+      .filter((i: any) => i.backdrop_path)
+      .slice(0, 12)
+      .map((i: any, idx: number) =>
+        formatTmdbItem(i, 'tv', undefined, idx < 2 ? 'NEW SERIES' : undefined)
+      );
 
     return [
       {
         id: 'top-10',
-        title: 'Top 10 in Pakistan',
+        title: `Top 10 in ${region}`,
         isTop10: true,
-        region: 'Pakistan',
+        region,
+        cardLayout: 'landscape',
         items: top10Items,
       },
       {
@@ -245,31 +308,92 @@ export async function getLiveStreamingRows(region: string = 'Pakistan'): Promise
         id: 'top-tv',
         title: 'Top TV',
         seeMoreLink: '/tv',
+        cardLayout: 'landscape',
         items: topTvItems,
       },
       {
         id: 'comedy-tv',
         title: 'Comedy TV',
         seeMoreLink: '/tv',
+        cardLayout: 'landscape',
         items: comedyItems,
       },
       {
         id: 'mystery-thriller-tv',
         title: 'Mystery and thriller TV',
         seeMoreLink: '/tv',
+        cardLayout: 'landscape',
         items: mysteryItems,
       },
       {
         id: 'top-movies',
         title: 'Top movies',
         seeMoreLink: '/movies',
+        cardLayout: 'landscape',
         items: topMoviesItems,
       },
       {
         id: 'horror-tv',
         title: 'Horror TV',
         seeMoreLink: '/tv',
+        cardLayout: 'landscape',
         items: horrorItems,
+      },
+      {
+        id: 'action-adventure-tv',
+        title: 'Action & Adventure TV',
+        seeMoreLink: '/tv',
+        cardLayout: 'landscape',
+        items: actionTvItems,
+      },
+      {
+        id: 'drama-tv',
+        title: 'Drama TV',
+        seeMoreLink: '/tv',
+        cardLayout: 'landscape',
+        items: dramaItems,
+      },
+      {
+        id: 'romance-movies',
+        title: 'Romance & Drama Movies',
+        seeMoreLink: '/movies',
+        cardLayout: 'landscape',
+        items: romanceItems,
+      },
+      {
+        id: 'award-winners',
+        title: 'Award Winners & Acclaimed',
+        seeMoreLink: '/movies',
+        cardLayout: 'landscape',
+        items: awardItems,
+      },
+      {
+        id: 'scifi-fantasy',
+        title: 'Sci-Fi & Fantasy',
+        seeMoreLink: '/movies',
+        cardLayout: 'landscape',
+        items: scifiItems,
+      },
+      {
+        id: 'crime-movies',
+        title: 'Crime & Thriller Movies',
+        seeMoreLink: '/movies',
+        cardLayout: 'landscape',
+        items: crimeItems,
+      },
+      {
+        id: 'kids-family',
+        title: 'Kids & Family',
+        seeMoreLink: '/movies',
+        cardLayout: 'landscape',
+        items: kidsItems,
+      },
+      {
+        id: 'anime-animation',
+        title: 'Anime & Animation',
+        seeMoreLink: '/tv',
+        cardLayout: 'landscape',
+        items: animeItems,
       },
     ];
   } catch (error) {

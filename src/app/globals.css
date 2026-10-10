@@ -142,25 +142,11 @@ a {
 .toggle-box-logo {
   display: block;
   overflow: visible;
+  transition: opacity var(--transition-fast);
 }
 
-.tb-logo-box,
-.tb-logo-knob,
-.tb-logo-badge-rect {
-  transition: all var(--transition-fast);
-}
-
-.brand-btn:hover .tb-logo-box {
-  stroke: rgba(255, 255, 255, 0.65);
-}
-
-.brand-btn:hover .tb-logo-knob {
-  filter: drop-shadow(0 0 7px rgba(255, 255, 255, 0.85));
-}
-
-.brand-btn:hover .tb-logo-badge-rect {
-  fill: rgba(255, 255, 255, 0.15);
-  stroke: rgba(255, 255, 255, 0.45);
+.brand-btn:hover .toggle-box-logo {
+  opacity: 0.82;
 }
 
 .nav-links {
@@ -1622,6 +1608,7 @@ a {
   max-width: 65ch;
   display: -webkit-box;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -1797,10 +1784,30 @@ a {
   .hero-carousel-synopsis {
     font-size: 0.92rem;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
   }
   .hero-carousel-controls {
     align-self: flex-start;
   }
+}
+
+/* ==========================================================================
+   HERO SECTION DIVIDER (REPLACES GENRE STRIP)
+   ========================================================================== */
+.hero-section-divider {
+  width: 100%;
+  max-width: 100%;
+  margin: 0 0 1.25rem 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.06) 10%,
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0.06) 90%,
+    transparent 100%
+  );
+  border: none;
 }
 
 .page-hero-copy {
@@ -2414,18 +2421,15 @@ a {
   overflow-y: visible;
   scroll-behavior: smooth;
   scroll-snap-type: x mandatory;
-  padding: 0.6rem 0.2rem 1rem;
+  padding: 0.85rem 0.6rem 1.25rem;
   scrollbar-width: none !important;
   -ms-overflow-style: none !important;
 }
 
 /* ==========================================================================
-   CARD SIZING — PORTRAIT 2:3 RATIO, 6 CARDS VISIBLE PER ROW
+   CARD SIZING & LAYOUT — LANDSCAPE (16:9) & PORTRAIT (2:3) MODES
    ========================================================================== */
 .media-card-wrapper {
-  flex: 0 0 calc((100% - (5 * 0.55rem)) / 6.1);
-  min-width: 130px;
-  max-width: 210px;
   scroll-snap-align: start;
   position: relative;
   overflow: visible;
@@ -2437,56 +2441,62 @@ a {
 
 .media-card-wrapper:hover {
   transform: translateY(-5px);
-  z-index: 20;
+  z-index: 25;
 }
 
-/* The hover ring lives on the wrapper (outside the scroll clip zone)
-   so all 4 sides are fully visible */
-.media-card-wrapper::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 8px;
-  border: 2.5px solid transparent;
-  pointer-events: none;
-  transition: border-color 0.22s ease, box-shadow 0.25s ease;
-  z-index: 30;
+/* Standard Landscape cards (Top TV, Comedy TV, Movies, etc. — 16:9) */
+.landscape-card-wrapper,
+.media-card-wrapper:not(.portrait-card-wrapper):not(.top10-card-wrapper) {
+  flex: 0 0 calc((100% - (4 * 0.65rem)) / 4.8);
+  min-width: 210px;
+  max-width: 330px;
 }
 
-.media-card-wrapper:hover::after {
-  border-color: rgba(255, 255, 255, 0.88);
-  box-shadow:
-    0 0 20px rgba(255, 255, 255, 0.14),
-    0 16px 40px rgba(0, 0, 0, 0.65);
+.landscape-card-wrapper .media-card-container,
+.media-card-wrapper:not(.portrait-card-wrapper):not(.top10-card-wrapper) .media-card-container {
+  aspect-ratio: 16 / 9;
 }
 
+/* Portrait cards (Featured Originals and Exclusives — 2:3) */
+.portrait-card-wrapper {
+  flex: 0 0 calc((100% - (5 * 0.55rem)) / 6.1);
+  min-width: 140px;
+  max-width: 220px;
+}
+
+.portrait-card-wrapper .media-card-container {
+  aspect-ratio: 2 / 3;
+}
+
+/* The card container itself holds the 2px border — immune to clipping on all 4 sides */
 .media-card-container {
   width: 100%;
-  aspect-ratio: 2 / 3;
   border-radius: 8px;
   position: relative;
   overflow: hidden;
   cursor: pointer;
   user-select: none;
   background: linear-gradient(180deg, #0d0d0d 0%, #080808 100%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-sizing: border-box;
+  border: 2px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
   transition:
-    border-color 0.22s ease,
-    box-shadow 0.25s ease,
-    transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .media-card-container:hover,
 .media-card-container:focus-visible,
 .media-card-container.card-hovered {
-  border-color: rgba(255, 255, 255, 0.12);
-  box-shadow: 0 20px 44px rgba(0, 0, 0, 0.7);
+  border-color: #ffffff !important;
+  box-shadow:
+    0 0 22px rgba(255, 255, 255, 0.22),
+    0 16px 38px rgba(0, 0, 0, 0.85);
 }
 
 .media-card-container:focus-visible {
-  outline: 2px solid rgba(255, 255, 255, 0.9);
-  outline-offset: 1px;
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
 }
 
 .card-poster {
@@ -2547,6 +2557,19 @@ a {
   min-width: 0;
 }
 
+.card-meta-lock {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 0.2rem;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.8));
+  vertical-align: middle;
+}
+
+.card-meta-lock svg {
+  display: block;
+}
+
 .card-meta-dot {
   color: rgba(255, 255, 255, 0.6);
 }
@@ -2560,6 +2583,7 @@ a {
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.95);
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -2569,23 +2593,22 @@ a {
   display: none;
 }
 
-/* Badge at top right */
+/* Badge at top right — crisp white pill with black text matching reference */
 .card-top-badge {
   position: absolute;
   top: 0.45rem;
   right: 0.45rem;
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(8px);
-  color: #ffffff;
-  font-size: 0.58rem;
+  background: #ffffff;
+  color: #050811;
+  font-size: 0.52rem;
   font-weight: 800;
-  letter-spacing: 0.05em;
-  padding: 0.2rem 0.5rem;
-  border-radius: 9999px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  z-index: 4;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  letter-spacing: 0.04em;
+  padding: 0.16rem 0.42rem;
+  border-radius: 4px;
+  z-index: 5;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
   text-transform: uppercase;
+  pointer-events: none;
 }
 
 /* Yellow prime gold bag at bottom left */
@@ -2789,7 +2812,7 @@ a {
   line-height: 1;
   letter-spacing: -0.06em;
   color: transparent;
-  -webkit-text-stroke: 3.5px #f59e0b;
+  -webkit-text-stroke: 3.5px #cbd5e1;
   filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.9));
 }
 
@@ -2801,6 +2824,59 @@ a {
   letter-spacing: -0.06em;
   color: #0b1322;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+/* Refresh reload button next to Top 10 title */
+.top10-reload-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.75);
+  cursor: pointer;
+  padding: 3px;
+  border-radius: 4px;
+  transition: color 0.2s ease, transform 0.2s ease;
+  margin-top: 1px;
+}
+
+.top10-reload-btn:hover {
+  color: #ffffff;
+  transform: scale(1.15);
+}
+
+.top10-reload-btn.is-spinning svg {
+  animation: spinTop10 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes spinTop10 {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Reference centered See More button at bottom of home */
+.ref-see-more-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.62rem 1.75rem;
+  background: #232733;
+  color: #ffffff;
+  font-size: 0.86rem;
+  font-weight: 700;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+
+.ref-see-more-btn:hover {
+  background: #333849;
+  border-color: rgba(255, 255, 255, 0.35);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
 }
 
 /* ==========================================================================
@@ -3355,23 +3431,41 @@ a {
 }
 
 /* ==========================================================================
-   FOOTER (MATCHING SCREENSHOT)
+   FOOTER (ELEVATED CINEMATIC STREAMING FOOTER)
    ========================================================================== */
 .footer-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1.35rem;
-  padding: 2.5rem 2rem 3rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  background: var(--bg-core);
+  padding: 0 1.5rem 3.5rem;
+  background: linear-gradient(180deg, #050508 0%, #030305 100%);
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.footer-section-divider {
+  width: 100%;
+  max-width: 100%;
+  margin: 0 0 2.5rem 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.06) 10%,
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0.06) 90%,
+    transparent 100%
+  );
+  border: none;
 }
 
 .footer-see-more-wrapper {
   display: flex;
   justify-content: center;
   width: 100%;
+  margin-bottom: 2.5rem;
 }
 
 .see-more-center-btn {
@@ -3394,38 +3488,311 @@ a {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
 }
 
-.footer-logo-wrapper {
+.footer-content-wrap {
+  width: 100%;
+  max-width: 1240px;
+  margin: 0 auto;
   display: flex;
-  justify-content: center;
-  opacity: 0.6;
-  transition: opacity var(--transition-smooth);
+  flex-direction: column;
+  gap: 2.75rem;
 }
 
-.footer-logo-wrapper:hover {
-  opacity: 1;
-}
-
-.footer-links-row {
+/* --- Top Tier: Brand Identity, Live Status & Language --- */
+.footer-top-tier {
   display: flex;
   align-items: center;
-  gap: 1.25rem;
+  justify-content: space-between;
   flex-wrap: wrap;
-  justify-content: center;
-  font-size: 0.74rem;
-  color: rgba(255, 255, 255, 0.55);
+  gap: 1.5rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
 }
 
-.footer-link {
+.footer-brand-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  max-width: 480px;
+}
+
+.footer-logo {
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.8));
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.footer-logo:hover {
+  transform: scale(1.02);
+}
+
+.footer-tagline {
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.52);
+  margin: 0;
+}
+
+.footer-utility-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+}
+
+.footer-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.38rem 0.85rem;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.24);
+  border-radius: 9999px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: #34d399;
+  letter-spacing: 0.01em;
+}
+
+.footer-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+  animation: pulseStatus 2s infinite ease-in-out;
+}
+
+@keyframes pulseStatus {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.45; transform: scale(0.85); }
+}
+
+.footer-lang-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.42rem 0.95rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 6px;
+  color: #ffffff;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.footer-lang-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+/* --- Middle Tier: 4-Column Quick Navigation Grid --- */
+.footer-columns-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2.25rem;
+}
+
+@media (max-width: 860px) {
+  .footer-columns-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .footer-columns-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
+
+.footer-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.footer-col-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #ffffff;
+  margin: 0;
+}
+
+.footer-nav-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.footer-nav-list li a {
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.58);
+  text-decoration: none;
+  transition: color 0.18s ease, transform 0.18s ease;
+  display: inline-block;
+}
+
+.footer-nav-list li a:hover {
+  color: #38bdf8;
+  transform: translateX(2px);
+}
+
+.footer-static-item {
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.42);
+  user-select: none;
+}
+
+/* --- Bottom Tier: Signature Prime Video Style Legal Strip --- */
+.footer-bottom-strip {
+  position: relative;
+  padding-top: 2.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.35rem;
+  text-align: center;
+}
+
+/* Feathered gradient hairline — mirrors the top divider for symmetry */
+.footer-bottom-strip::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(100%, 680px);
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.06) 12%,
+    rgba(255, 255, 255, 0.22) 50%,
+    rgba(255, 255, 255, 0.06) 88%,
+    transparent 100%
+  );
+}
+
+.footer-legal-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.15rem 0.1rem;
+}
+
+.footer-legal-link {
+  position: relative;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-decoration: none;
+  padding: 0.3rem 0.55rem;
+  border-radius: var(--radius-xs);
   transition: color var(--transition-fast);
 }
 
-.footer-link:hover {
-  color: #ffffff;
-  text-decoration: underline;
+/* Animated underline reveal on hover */
+.footer-legal-link::after {
+  content: '';
+  position: absolute;
+  left: 0.55rem;
+  right: 0.55rem;
+  bottom: 0.18rem;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform var(--transition-fast);
 }
 
-.footer-copyright {
-  color: rgba(255, 255, 255, 0.35);
+.footer-legal-link:hover {
+  color: #ffffff;
+}
+
+.footer-legal-link:hover::after {
+  transform: scaleX(1);
+}
+
+.footer-dot-sep {
+  color: rgba(255, 255, 255, 0.22);
+  font-size: 0.6rem;
+  user-select: none;
+  transform: translateY(-1px);
+}
+
+.footer-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+}
+
+.footer-copyright-text {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  letter-spacing: 0.01em;
+  margin: 0;
+}
+
+.footer-meta-divider {
+  width: 1px;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.footer-tmdb-credit {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.footer-tmdb-credit:hover {
+  color: var(--text-secondary);
+}
+
+.footer-tmdb-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.16rem 0.5rem;
+  border-radius: var(--radius-xs);
+  background: rgba(1, 180, 228, 0.14);
+  border: 1px solid rgba(1, 180, 228, 0.35);
+  color: #5ed3f3;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.footer-tmdb-credit:hover .footer-tmdb-badge {
+  background: rgba(1, 180, 228, 0.22);
+  border-color: rgba(1, 180, 228, 0.55);
+}
+
+@media (max-width: 520px) {
+  .footer-bottom-strip {
+    gap: 1rem;
+  }
+
+  .footer-legal-link {
+    font-size: 0.76rem;
+    padding: 0.28rem 0.45rem;
+  }
 }
 
 /* ==========================================================================
@@ -3613,6 +3980,7 @@ a {
   color: #e2e8f0;
   display: -webkit-box;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -4010,6 +4378,7 @@ a {
   color: rgba(255, 255, 255, 0.68);
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   max-width: 90ch;
@@ -4867,6 +5236,7 @@ a {
   color: #94a3b8;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   min-height: 2.3em;

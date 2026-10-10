@@ -91,7 +91,7 @@ export default function ToggleBoxHomePage() {
       ];
     }
 
-    const baseRows = !expandedRows && rows.length > 5 ? rows.slice(0, 5) : rows;
+    const baseRows = !expandedRows && rows.length > 7 ? rows.slice(0, 7) : rows;
 
     if (continueWatchingItems.length > 0) {
       return [
@@ -160,18 +160,18 @@ export default function ToggleBoxHomePage() {
           ))
         )}
 
-        {/* See more rows button */}
-        {!expandedRows && rows.length > 5 && !searchQuery && !isLoading && (
+        {/* See more rows button matching reference */}
+        {!expandedRows && rows.length > 7 && !searchQuery && !isLoading && (
           <div className="home-show-more">
             <button
-              className="join-prime-btn"
+              className="ref-see-more-btn"
               type="button"
               onClick={() => {
                 setExpandedRows(true);
-                triggerToast('Loaded full catalog');
+                triggerToast('Loaded full catalog (15 categories)');
               }}
             >
-              Show more titles
+              See more
             </button>
           </div>
         )}

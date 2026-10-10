@@ -14,6 +14,7 @@ import {
 interface MediaCardProps {
   item: MediaItem;
   rank?: number;
+  cardLayout?: 'portrait' | 'landscape';
   isInWatchlist: boolean;
   onToggleWatchlist: (item: MediaItem) => void;
   onSelect: (item: MediaItem) => void;
@@ -23,6 +24,7 @@ interface MediaCardProps {
 export const MediaCard: React.FC<MediaCardProps> = ({
   item,
   rank,
+  cardLayout = 'landscape',
   isInWatchlist,
   onToggleWatchlist,
   onSelect,
@@ -32,8 +34,11 @@ export const MediaCard: React.FC<MediaCardProps> = ({
   const [isLiked, setIsLiked] = useState(false);
   const [imgError, setImgError] = useState(false);
 
-  // Portrait cards: prefer poster, fall back to backdrop
-  const displayImage = item.posterUrl || item.backdropUrl || '';
+  // Landscape cards prefer 16:9 backdrop; portrait cards prefer 2:3 poster
+  const isPortrait = cardLayout === 'portrait';
+  const displayImage = isPortrait
+    ? (item.posterUrl || item.backdropUrl || '')
+    : (item.backdropUrl || item.posterUrl || '');
 
   const handleCardClick = () => {
     onSelect(item);
@@ -41,7 +46,13 @@ export const MediaCard: React.FC<MediaCardProps> = ({
 
   return (
     <div
-      className={`media-card-wrapper ${rank ? 'top10-card-wrapper' : ''}`}
+      className={`media-card-wrapper ${
+        rank
+          ? 'top10-card-wrapper'
+          : isPortrait
+            ? 'portrait-card-wrapper'
+            : 'landscape-card-wrapper'
+      }`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -94,17 +105,12 @@ export const MediaCard: React.FC<MediaCardProps> = ({
             </div>
           )}
 
-          {/* Yellow Toggle gold badge at bottom left */}
-          <div className="card-gold-badge" title="Included with Toggle Box">
-            <ToggleGoldBadgeIcon size={13} aria-hidden="true" />
-          </div>
-
           {/* Quality badge (4K, HDR) */}
           {item.quality && item.quality[0] && (
             <div className="card-quality-tag">{item.quality[0]}</div>
           )}
 
-          {/* Card Title */}
+          {/* Card Title & Metadata */}
           <div className="card-poster-content">
             <h3 className="card-poster-title">{item.title}</h3>
             <div className="card-poster-meta">
@@ -113,6 +119,9 @@ export const MediaCard: React.FC<MediaCardProps> = ({
                 •
               </span>
               <span>{item.type === 'tv' ? 'Series' : 'Movie'}</span>
+              <span className="card-meta-lock" title="Included with Toggle Box">
+                <ToggleGoldBadgeIcon size={12} aria-hidden="true" />
+              </span>
             </div>
             {item.genre && item.genre[0] && (
               <span className="card-genre-sub">{item.genre.slice(0, 2).join(' • ')}</span>

@@ -6,114 +6,15 @@ export const ToggleBoxLogo: React.FC<{ className?: string; height?: number }> = 
 }) => (
   <svg
     height={height}
-    viewBox="0 0 174 34"
+    viewBox="0 0 76 34"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
     className={`toggle-box-logo ${className}`}
     aria-label="Toggle Box Logo"
   >
-    <defs>
-      {/* Box surface - sleek obsidian gradient */}
-      <linearGradient id="tbBoxBg" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stopColor="#22242b" />
-        <stop offset="100%" stopColor="#08080a" />
-      </linearGradient>
-
-      {/* Metallic chrome border */}
-      <linearGradient id="tbBoxBorder" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stopColor="rgba(255, 255, 255, 0.55)" />
-        <stop offset="50%" stopColor="rgba(255, 255, 255, 0.12)" />
-        <stop offset="100%" stopColor="rgba(255, 255, 255, 0.35)" />
-      </linearGradient>
-
-      {/* Active knob - platinum white gradient */}
-      <linearGradient id="tbKnobGrad" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stopColor="#ffffff" />
-        <stop offset="100%" stopColor="#d1d5db" />
-      </linearGradient>
-
-      {/* Active energy conduit glow */}
-      <linearGradient id="tbTrackGlow" x1="0" y1="0" x2="1" y2="0">
-        <stop offset="0%" stopColor="rgba(255, 255, 255, 0.28)" />
-        <stop offset="100%" stopColor="rgba(255, 255, 255, 0.06)" />
-      </linearGradient>
-
-      {/* Knob depth drop-shadow */}
-      <filter id="tbKnobShadow" x="-30%" y="-30%" width="160%" height="160%">
-        <feDropShadow dx="0" dy="1.5" stdDeviation="1.5" floodColor="#000000" floodOpacity="0.75" />
-      </filter>
-    </defs>
-
-    {/* ================= ICON MARK (THE TOGGLE BOX) ================= */}
-    <g className="tb-logo-icon">
-      {/* Outer Squircle Box */}
-      <rect
-        className="tb-logo-box"
-        x="1.5"
-        y="1.5"
-        width="31"
-        height="31"
-        rx="8"
-        fill="url(#tbBoxBg)"
-        stroke="url(#tbBoxBorder)"
-        strokeWidth="1.2"
-      />
-
-      {/* Curved glass glint highlight */}
-      <path
-        d="M 6 6 Q 17 3.5 28 6"
-        stroke="rgba(255, 255, 255, 0.35)"
-        strokeWidth="1"
-        strokeLinecap="round"
-        fill="none"
-      />
-
-      {/* Inner Track (pill) */}
-      <rect
-        x="5.5"
-        y="10.5"
-        width="23"
-        height="13"
-        rx="6.5"
-        fill="#000000"
-        stroke="rgba(255, 255, 255, 0.2)"
-        strokeWidth="1"
-      />
-
-      {/* Active Energy Fill in Track */}
-      <rect
-        x="6.5"
-        y="11.5"
-        width="14"
-        height="11"
-        rx="5.5"
-        fill="url(#tbTrackGlow)"
-      />
-
-      {/* Power indicator spark dot */}
-      <circle cx="11" cy="17" r="1.4" fill="#ffffff" opacity="0.85" />
-
-      {/* Active Sliding Knob */}
-      <circle
-        className="tb-logo-knob"
-        cx="22"
-        cy="17"
-        r="4.8"
-        fill="url(#tbKnobGrad)"
-        filter="url(#tbKnobShadow)"
-      />
-
-      {/* Embedded Play Arrow (▶) in Knob */}
-      <polygon
-        points="21,14.8 24.5,17 21,19.2"
-        fill="#050507"
-      />
-    </g>
-
     {/* ================= WORDMARK ================= */}
-    {/* "TOGGLE" Bold Sans */}
     <text
-      x="44"
+      x="1"
       y="23.5"
       fill="#ffffff"
       fontFamily="var(--font-outfit), 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
@@ -121,35 +22,8 @@ export const ToggleBoxLogo: React.FC<{ className?: string; height?: number }> = 
       fontSize="19"
       letterSpacing="-0.03em"
     >
-      TOGGLE
+      T-BOX
     </text>
-
-    {/* "BOX" Streaming Pill Badge */}
-    <g className="tb-logo-badge">
-      <rect
-        className="tb-logo-badge-rect"
-        x="124"
-        y="6.5"
-        width="46"
-        height="21"
-        rx="5.5"
-        fill="rgba(255, 255, 255, 0.08)"
-        stroke="rgba(255, 255, 255, 0.28)"
-        strokeWidth="1"
-      />
-      <text
-        x="147"
-        y="21"
-        textAnchor="middle"
-        fill="#ffffff"
-        fontFamily="var(--font-outfit), 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
-        fontWeight="800"
-        fontSize="11"
-        letterSpacing="0.12em"
-      >
-        BOX
-      </text>
-    </g>
   </svg>
 );
 
@@ -245,55 +119,105 @@ export const VolumeMuteIcon: React.FC<{ size?: number; className?: string }> = (
   </svg>
 );
 
-/** Small Amazon-style gold bag badge used across cards and hero labels */
-export const ToggleGoldBadgeIcon: React.FC<{ size?: number; className?: string }> = ({ size = 14, className = '' }) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-    className={className}
-    aria-hidden="true"
-  >
-    <path
-      d="M8.35 9.2V8.35C8.35 6.22 10.02 4.55 12.1 4.55C14.18 4.55 15.85 6.22 15.85 8.35V9.2"
-      stroke="#FFD86A"
-      strokeWidth="1.85"
-      strokeLinecap="round"
-    />
-    <path
-      d="M6.55 9.35H17.45C18.01 9.35 18.43 9.86 18.32 10.41L17.45 14.78C17.28 15.65 16.51 16.28 15.63 16.28H8.37C7.49 16.28 6.72 15.65 6.55 14.78L5.68 10.41C5.57 9.86 5.99 9.35 6.55 9.35Z"
-      fill="#E6A10E"
-    />
-    <path
-      d="M7.25 9.95H16.75L16.15 13.9C16.03 14.67 15.37 15.23 14.59 15.23H9.41C8.63 15.23 7.97 14.67 7.85 13.9L7.25 9.95Z"
-      fill="#F6C13B"
-      fillOpacity="0.92"
-    />
-    <path
-      d="M7.15 9.7H16.85"
-      stroke="#FFE8A0"
-      strokeWidth="0.9"
-      strokeLinecap="round"
-      strokeOpacity="0.95"
-    />
-    <path
-      d="M9.15 12.15C9.92 12.73 10.9 13.03 12 13.03C13.1 13.03 14.08 12.73 14.85 12.15"
-      stroke="#FFF2C4"
-      strokeWidth="0.9"
-      strokeLinecap="round"
-      strokeOpacity="0.95"
-    />
-    <path
-      d="M6.55 9.35H17.45C18.01 9.35 18.43 9.86 18.32 10.41L17.45 14.78C17.28 15.65 16.51 16.28 15.63 16.28H8.37C7.49 16.28 6.72 15.65 6.55 14.78L5.68 10.41C5.57 9.86 5.99 9.35 6.55 9.35Z"
-      stroke="#C98605"
-      strokeWidth="0.7"
-      strokeLinejoin="round"
-      strokeOpacity="0.8"
-    />
-  </svg>
-);
+/** Cute smiling lock and key emblem matching user reference artwork */
+export const ToggleGoldBadgeIcon: React.FC<{ size?: number; className?: string }> = ({ size = 14, className = '' }) => {
+  const width = Math.round(size * 1.25);
+  return (
+    <svg
+      width={width}
+      height={size}
+      viewBox="0 0 42 34"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      aria-hidden="true"
+    >
+      <defs>
+        {/* Shadow clip for lock body */}
+        <clipPath id="lockBodyClip">
+          <circle cx="16" cy="22" r="10" />
+        </clipPath>
+      </defs>
+
+      {/* ================= 1. CUTE SMILING LOCK ================= */}
+      {/* Outer dark navy shackle stroke */}
+      <path
+        d="M 11 16 V 11 C 11 6.5 13.2 4 16 4 C 18.8 4 21 6.5 21 11 V 16"
+        stroke="#0C2456"
+        strokeWidth="4.6"
+        strokeLinecap="round"
+      />
+      {/* Inner coral/orange shackle core */}
+      <path
+        d="M 11 16 V 11 C 11 6.5 13.2 4 16 4 C 18.8 4 21 6.5 21 11 V 16"
+        stroke="#F06543"
+        strokeWidth="2.3"
+        strokeLinecap="round"
+      />
+
+      {/* Lock circular body */}
+      <circle
+        cx="16"
+        cy="22"
+        r="10"
+        fill="#FFBD1A"
+        stroke="#0C2456"
+        strokeWidth="2.4"
+      />
+
+      {/* Orange crescent shadow on bottom-left of lock body */}
+      <g clipPath="url(#lockBodyClip)">
+        <path
+          d="M 6 22 A 10 10 0 0 0 20 31.8 A 10 10 0 0 1 7.2 16 Z"
+          fill="#F58220"
+        />
+      </g>
+
+      {/* Lock cute smiling face */}
+      <circle cx="13" cy="20.6" r="1.15" fill="#0C2456" />
+      <circle cx="19" cy="19.8" r="1.15" fill="#0C2456" />
+      <path
+        d="M 14.3 22 Q 16.5 24.8 18.2 21.6"
+        stroke="#0C2456"
+        strokeWidth="1.9"
+        strokeLinecap="round"
+        fill="none"
+      />
+
+      {/* ================= 2. CUTE SMILING KEY ================= */}
+      {/* Key shaft and teeth (behind head) */}
+      <path
+        d="M 30.8 15.5 V 26.8 C 30.8 28.3 33.6 28.3 33.6 26.8 V 25.8 H 36.2 C 37.4 25.8 37.4 23.3 36.2 23.3 H 33.6 V 22.3 H 35.8 C 37 22.3 37 19.8 35.8 19.8 H 33.6 V 15.5 Z"
+        fill="#C5D5FB"
+        stroke="#0C2456"
+        strokeWidth="2.1"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+      />
+
+      {/* Key round head */}
+      <circle
+        cx="32.2"
+        cy="11.2"
+        r="5.4"
+        fill="#C5D5FB"
+        stroke="#0C2456"
+        strokeWidth="2.3"
+      />
+
+      {/* Key cute smiling face */}
+      <circle cx="30.5" cy="10.4" r="0.8" fill="#0C2456" />
+      <circle cx="33.9" cy="10.4" r="0.8" fill="#0C2456" />
+      <path
+        d="M 31.5 11.9 Q 32.2 13.2 32.9 11.9"
+        stroke="#0C2456"
+        strokeWidth="1.3"
+        strokeLinecap="round"
+        fill="none"
+      />
+    </svg>
+  );
+};
 
 export const RefreshIcon: React.FC<{ size?: number; className?: string }> = ({ size = 16, className = '' }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className={className}>

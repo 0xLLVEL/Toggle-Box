@@ -3,7 +3,7 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import type { CategoryRow, MediaItem } from '@/types/media';
 import { MediaCard } from './MediaCard';
-import { ChevronLeftIcon, ChevronRightIcon } from './Icons';
+import { ChevronLeftIcon, ChevronRightIcon, RefreshIcon } from './Icons';
 import { useWatchlist } from '@/context/WatchlistContext';
 
 interface MediaRowProps {
@@ -25,6 +25,7 @@ const MediaRowInner: React.FC<MediaRowProps> = ({
   const [canScrollRight, setCanScrollRight] = useState(true);
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const checkScroll = useCallback(() => {
     if (scrollRef.current) {
@@ -68,7 +69,7 @@ const MediaRowInner: React.FC<MediaRowProps> = ({
     }
   };
 
-  const displayTitle = row.isTop10 ? 'Top 10 Today' : row.title;
+  const isPortrait = row.cardLayout === 'portrait' || row.id === 'featured-originals';
 
   if (row.items.length === 0) {
     return null;
@@ -79,7 +80,21 @@ const MediaRowInner: React.FC<MediaRowProps> = ({
       {/* Row Header */}
       <div className="row-header">
         <div className="row-title-left">
-          <h2 className="row-title">{displayTitle}</h2>
+          <h2 className="row-title">{row.title}</h2>
+          {row.isTop10 && (
+            <button
+              type="button"
+              className={`top10-reload-btn ${isRefreshing ? 'is-spinning' : ''}`}
+              title="Refresh Top 10"
+              aria-label="Refresh Top 10"
+              onClick={() => {
+                setIsRefreshing(true);
+                setTimeout(() => setIsRefreshing(false), 800);
+              }}
+            >
+              <RefreshIcon size={15} />
+            </button>
+          )}
           {row.seeMoreLink && (
             <a href={row.seeMoreLink} className="see-more-link see-more-inline">
               <span>See more</span>
@@ -134,13 +149,16 @@ const MediaRowInner: React.FC<MediaRowProps> = ({
         <div
           ref={scrollRef}
           onScroll={checkScroll}
-          className={`carousel-track ${row.isTop10 ? 'top10-track' : ''}`}
+          className={`carousel-track ${
+            row.isTop10 ? 'top10-track' : isPortrait ? 'portrait-track' : 'landscape-track'
+          }`}
         >
           {row.items.map((item, idx) => (
             <MediaCard
               key={item.id}
               item={item}
               rank={row.isTop10 ? item.rank || idx + 1 : undefined}
+              cardLayout={isPortrait ? 'portrait' : 'landscape'}
               isInWatchlist={watchlist.includes(item.id)}
               onToggleWatchlist={onToggleWatchlist}
               onSelect={onSelectMedia}

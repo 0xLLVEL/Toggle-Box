@@ -1,81 +1,142 @@
 'use client';
 
 import React from 'react';
+import { FilterIcon, CloseIcon, SparklesIcon, ChevronDownIcon } from './Icons';
 
-export type FilterCategory = 'all' | 'originals' | 'top10' | 'movies' | 'tv' | '4k';
+export type SortOption = 'trending' | 'rating' | 'year' | 'alphabetical';
+
+export interface FilterState {
+  selectedGenre: string;
+  sortBy: SortOption;
+  only4k: boolean;
+  onlyOriginals: boolean;
+}
 
 interface FilterBarProps {
-  activeFilter: FilterCategory;
-  onFilterChange: (filter: FilterCategory) => void;
-  showPrimeOnly: boolean;
-  onTogglePrimeOnly: () => void;
-  selectedRegion: string;
-  onSelectRegion: (region: string) => void;
-  regions: string[];
+  genres: string[];
+  filterState: FilterState;
+  onGenreChange: (genre: string) => void;
+  onSortChange: (sort: SortOption) => void;
+  onToggle4k: () => void;
+  onToggleOriginals: () => void;
+  onResetFilters: () => void;
+  totalResultsCount?: number;
 }
 
 export const FilterBar: React.FC<FilterBarProps> = ({
-  activeFilter,
-  onFilterChange,
-  showPrimeOnly,
-  onTogglePrimeOnly,
-  selectedRegion,
-  onSelectRegion,
-  regions,
+  genres,
+  filterState,
+  onGenreChange,
+  onSortChange,
+  onToggle4k,
+  onToggleOriginals,
+  onResetFilters,
+  totalResultsCount,
 }) => {
-  const filterPills: { id: FilterCategory; label: string }[] = [
-    { id: 'all', label: 'All Content' },
-    { id: 'originals', label: 'Originals & Exclusives' },
-    { id: 'top10', label: 'Top 10 Ranks' },
-    { id: 'movies', label: 'Movies' },
-    { id: 'tv', label: 'TV Shows' },
-    { id: '4k', label: '4K Ultra HD' },
-  ];
+  const isAnyFilterActive =
+    filterState.selectedGenre !== 'All' ||
+    filterState.sortBy !== 'trending' ||
+    filterState.only4k ||
+    filterState.onlyOriginals;
+
+  const sortLabels: Record<SortOption, string> = {
+    trending: 'Trending Today',
+    rating: 'Top Rated (TMDB)',
+    year: 'Release Year',
+    alphabetical: 'Title (A–Z)',
+  };
 
   return (
     <div className="filter-bar-container">
-      <div className="filter-pills-list">
-        {filterPills.map((pill) => (
-          <button
-            key={pill.id}
-            onClick={() => onFilterChange(pill.id)}
-            className={`filter-pill ${activeFilter === pill.id ? 'filter-pill-active' : ''}`}
-          >
-            {pill.label}
-          </button>
-        ))}
-      </div>
+      <div className="filter-bar-inner">
+        {/* Left: Genre Pills Row with Horizontal Scroll */}
+        <div className="filter-genre-scroll-wrap">
+          <div className="filter-pills-list">
+            <button
+              type="button"
+              className={`filter-pill ${filterState.selectedGenre === 'All' ? 'filter-pill-active' : ''}`}
+              onClick={() => onGenreChange('All')}
+            >
+              All Genres
+            </button>
 
-      <div className="filter-controls-right">
-        {/* Toggle Switch: Included with Prime / Toggle Box */}
-        <label className="toggle-switch-wrapper" title="Show only included with Prime">
-          <span className="toggle-switch-label">Included with Prime</span>
+            {genres.map((genre) => {
+              const isActive = filterState.selectedGenre === genre;
+              return (
+                <button
+                  key={genre}
+                  type="button"
+                  className={`filter-pill ${isActive ? 'filter-pill-active' : ''}`}
+                  onClick={() => onGenreChange(genre)}
+                >
+                  {genre}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Right: Sort and Feature Toggles */}
+        <div className="filter-controls-right">
+          {/* 4K UHD Toggle */}
           <button
             type="button"
-            role="switch"
-            aria-checked={showPrimeOnly}
-            onClick={onTogglePrimeOnly}
-            className={`toggle-switch-track ${showPrimeOnly ? 'active' : ''}`}
+            className={`filter-feature-btn ${filterState.only4k ? 'is-active' : ''}`}
+            onClick={onToggle4k}
+            title="Filter by 4K Ultra HD resolution"
           >
-            <span className="toggle-switch-thumb" />
+            <span>4K UHD</span>
           </button>
-        </label>
 
-        {/* Region Switcher for Top 10 */}
-        <div className="region-selector-wrapper">
-          <span className="region-label">Region:</span>
-          <select
-            value={selectedRegion}
-            onChange={(e) => onSelectRegion(e.target.value)}
-            className="region-select"
-            aria-label="Select Top 10 Region"
+          {/* TOGGLE Originals Toggle */}
+          <button
+            type="button"
+            className={`filter-feature-btn ${filterState.onlyOriginals ? 'is-active' : ''}`}
+            onClick={onToggleOriginals}
+            title="Filter by TOGGLE Originals"
           >
-            {regions.map((reg) => (
-              <option key={reg} value={reg}>
-                {reg}
-              </option>
-            ))}
-          </select>
+            <SparklesIcon size={13} />
+            <span>Originals</span>
+          </button>
+
+          {/* Sort Selector Dropdown */}
+          <div className="filter-sort-wrapper">
+            <span className="sort-label">Sort:</span>
+            <div className="sort-select-box">
+              <select
+                value={filterState.sortBy}
+                onChange={(e) => onSortChange(e.target.value as SortOption)}
+                className="sort-select"
+                aria-label="Sort content"
+              >
+                <option value="trending">{sortLabels.trending}</option>
+                <option value="rating">{sortLabels.rating}</option>
+                <option value="year">{sortLabels.year}</option>
+                <option value="alphabetical">{sortLabels.alphabetical}</option>
+              </select>
+              <ChevronDownIcon size={13} className="sort-chevron-icon" />
+            </div>
+          </div>
+
+          {/* Reset Filters Pill (visible only when filters applied) */}
+          {isAnyFilterActive && (
+            <button
+              type="button"
+              className="filter-reset-btn"
+              onClick={onResetFilters}
+              title="Reset all active filters"
+            >
+              <CloseIcon size={13} />
+              <span>Reset</span>
+            </button>
+          )}
+
+          {/* Optional results count badge */}
+          {totalResultsCount !== undefined && (
+            <span className="filter-results-badge">
+              {totalResultsCount} {totalResultsCount === 1 ? 'title' : 'titles'}
+            </span>
+          )}
         </div>
       </div>
     </div>

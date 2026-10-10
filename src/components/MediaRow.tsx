@@ -4,6 +4,7 @@ import React, { useRef, useState, useEffect, useCallback } from 'react';
 import type { CategoryRow, MediaItem } from '@/types/media';
 import { MediaCard } from './MediaCard';
 import { ChevronLeftIcon, ChevronRightIcon } from './Icons';
+import { useWatchlist } from '@/context/WatchlistContext';
 
 interface MediaRowProps {
   row: CategoryRow;
@@ -18,15 +19,27 @@ const MediaRowInner: React.FC<MediaRowProps> = ({
   onToggleWatchlist,
   onSelectMedia,
 }) => {
+  const { watchProgress } = useWatchlist();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
 
   const checkScroll = useCallback(() => {
     if (scrollRef.current) {
       const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
       setCanScrollLeft(scrollLeft > 15);
       setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 15);
+
+      const maxScroll = Math.max(1, scrollWidth - clientWidth);
+      const calculatedPages = Math.max(1, Math.ceil(scrollWidth / clientWidth));
+      const activeIdx = Math.min(
+        calculatedPages - 1,
+        Math.max(0, Math.round((scrollLeft / maxScroll) * (calculatedPages - 1)))
+      );
+      setTotalPages(calculatedPages);
+      setCurrentPage(activeIdx);
     }
   }, []);
 
@@ -38,10 +51,20 @@ const MediaRowInner: React.FC<MediaRowProps> = ({
 
   const handleScroll = (direction: 'left' | 'right') => {
     if (scrollRef.current) {
-      const pageWidth = scrollRef.current.clientWidth * 0.82;
+      const pageWidth = scrollRef.current.clientWidth * 0.84;
       const scrollAmount = direction === 'left' ? -pageWidth : pageWidth;
       scrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-      setTimeout(checkScroll, 400);
+      setTimeout(checkScroll, 420);
+    }
+  };
+
+  const scrollToPageIndex = (pageIdx: number) => {
+    if (scrollRef.current && totalPages > 1) {
+      const { scrollWidth, clientWidth } = scrollRef.current;
+      const maxScroll = scrollWidth - clientWidth;
+      const targetScroll = (pageIdx / (totalPages - 1)) * maxScroll;
+      scrollRef.current.scrollTo({ left: targetScroll, behavior: 'smooth' });
+      setTimeout(checkScroll, 420);
     }
   };
 
@@ -57,18 +80,44 @@ const MediaRowInner: React.FC<MediaRowProps> = ({
       <div className="row-header">
         <div className="row-title-left">
           <h2 className="row-title">{displayTitle}</h2>
+          {row.seeMoreLink && (
+            <a href={row.seeMoreLink} className="see-more-link see-more-inline">
+              <span>See more</span>
+              <ChevronRightIcon size={13} />
+            </a>
+          )}
         </div>
 
-        {row.seeMoreLink && (
-          <a href={row.seeMoreLink} className="see-more-link">
-            <span>See More</span>
-            <ChevronRightIcon size={16} />
-          </a>
-        )}
+        <div className="row-header-right">
+          {/* Subtle multi-segment page indicators */}
+          {totalPages > 1 && (
+            <div
+              className="row-pagination-indicators"
+              aria-label={`Page ${currentPage + 1} of ${totalPages}`}
+              role="tablist"
+            >
+              {Array.from({ length: totalPages }).map((_, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  className={`pagination-indicator-dash ${idx === currentPage ? 'is-active' : ''}`}
+                  onClick={() => scrollToPageIndex(idx)}
+                  aria-label={`Jump to page ${idx + 1}`}
+                  role="tab"
+                  aria-selected={idx === currentPage}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Row Carousel Area */}
-      <div className="carousel-wrapper">
+      <div
+        className={`carousel-wrapper ${canScrollLeft ? 'has-left-mask' : ''} ${
+          canScrollRight ? 'has-right-mask' : ''
+        }`}
+      >
         {/* Left Arrow Button */}
         {canScrollLeft && (
           <button
@@ -77,7 +126,7 @@ const MediaRowInner: React.FC<MediaRowProps> = ({
             aria-label="Scroll left"
             type="button"
           >
-            <ChevronLeftIcon size={24} />
+            <ChevronLeftIcon size={22} />
           </button>
         )}
 
@@ -95,6 +144,7 @@ const MediaRowInner: React.FC<MediaRowProps> = ({
               isInWatchlist={watchlist.includes(item.id)}
               onToggleWatchlist={onToggleWatchlist}
               onSelect={onSelectMedia}
+              watchProgress={watchProgress?.[item.id]}
             />
           ))}
         </div>
@@ -107,7 +157,7 @@ const MediaRowInner: React.FC<MediaRowProps> = ({
             aria-label="Scroll right"
             type="button"
           >
-            <ChevronRightIcon size={24} />
+            <ChevronRightIcon size={22} />
           </button>
         )}
       </div>

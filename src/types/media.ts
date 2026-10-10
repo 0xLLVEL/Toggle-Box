@@ -84,5 +84,7 @@ export interface CategoryRow {
   seeMoreLink?: string;
   isTop10?: boolean;
   region?: string;
+  cardLayout?: 'portrait' | 'landscape';
   items: MediaItem[];
 }
+

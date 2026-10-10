@@ -2440,6 +2440,26 @@ a {
   z-index: 20;
 }
 
+/* The hover ring lives on the wrapper (outside the scroll clip zone)
+   so all 4 sides are fully visible */
+.media-card-wrapper::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+  border: 2.5px solid transparent;
+  pointer-events: none;
+  transition: border-color 0.22s ease, box-shadow 0.25s ease;
+  z-index: 30;
+}
+
+.media-card-wrapper:hover::after {
+  border-color: rgba(255, 255, 255, 0.88);
+  box-shadow:
+    0 0 20px rgba(255, 255, 255, 0.14),
+    0 16px 40px rgba(0, 0, 0, 0.65);
+}
+
 .media-card-container {
   width: 100%;
   aspect-ratio: 2 / 3;
@@ -2460,19 +2480,13 @@ a {
 .media-card-container:hover,
 .media-card-container:focus-visible,
 .media-card-container.card-hovered {
-  border-color: transparent;
-  box-shadow:
-    0 0 0 2.5px rgba(255, 255, 255, 0.88),
-    0 0 30px rgba(255, 255, 255, 0.16),
-    0 20px 44px rgba(0, 0, 0, 0.7);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 20px 44px rgba(0, 0, 0, 0.7);
 }
 
 .media-card-container:focus-visible {
-  outline: none;
-  box-shadow:
-    0 0 0 2.5px rgba(255, 255, 255, 1),
-    0 0 30px rgba(255, 255, 255, 0.22),
-    0 20px 44px rgba(0, 0, 0, 0.7);
+  outline: 2px solid rgba(255, 255, 255, 0.9);
+  outline-offset: 1px;
 }
 
 .card-poster {

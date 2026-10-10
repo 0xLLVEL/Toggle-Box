@@ -2,7 +2,8 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { ToggleBoxLogo, GlobeIcon } from './Icons';
+import { ToggleBoxLogo } from './Icons';
+import { LanguageSelector } from './LanguageSelector';
 
 interface FooterProps {
   onSeeMore?: () => void;
@@ -34,10 +35,7 @@ export const Footer: React.FC<FooterProps> = ({ onSeeMore }) => {
           </div>
 
           <div className="footer-utility-actions">
-            <button type="button" className="footer-lang-btn" aria-label="Language Selector">
-              <GlobeIcon size={14} />
-              <span>English (US)</span>
-            </button>
+            <LanguageSelector variant="button" align="left" />
           </div>
         </div>
 

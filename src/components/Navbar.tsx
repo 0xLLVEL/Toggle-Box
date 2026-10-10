@@ -8,9 +8,7 @@ import {
   SearchIcon,
   GridAppsIcon,
   UserIcon,
-  ChevronDownIcon,
   CheckIcon,
-  GlobeIcon,
   SettingsIcon,
   BookmarkIcon,
   HelpIcon,
@@ -18,6 +16,7 @@ import {
   SparklesIcon,
 } from './Icons';
 import { SearchModal } from './SearchModal';
+import { LanguageSelector } from './LanguageSelector';
 
 interface NavbarProps {
   searchQuery?: string;
@@ -32,14 +31,11 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const pathname = usePathname();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [selectedLang, setSelectedLang] = useState('EN');
-  const [showLangMenu, setShowLangMenu] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
   // v0.2: scroll shadow
   const [isScrolled, setIsScrolled] = useState(false);
 
-  const langRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -51,9 +47,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   // Click outside to close dropdown menus
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (langRef.current && !langRef.current.contains(e.target as Node)) {
-        setShowLangMenu(false);
-      }
       if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
         setShowProfileMenu(false);
       }
@@ -93,15 +86,6 @@ export const Navbar: React.FC<NavbarProps> = ({
       href: '/mystuff',
       label: `My Stuff${watchlistCount > 0 ? ` (${watchlistCount})` : ''}`,
     },
-  ];
-
-  const languages = [
-    { code: 'EN', name: 'English', native: 'English' },
-    { code: 'ES', name: 'Spanish', native: 'Español' },
-    { code: 'DE', name: 'German', native: 'Deutsch' },
-    { code: 'FR', name: 'French', native: 'Français' },
-    { code: 'UR', name: 'Urdu', native: 'اردو' },
-    { code: 'HI', name: 'Hindi', native: 'हिन्दी' },
   ];
 
   return (
@@ -147,59 +131,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             <SearchIcon size={20} />
           </button>
 
-          {/* Language selector */}
-          <div className="dropdown-wrapper" ref={langRef}>
-            <button
-              className={`lang-selector-btn${showLangMenu ? ' is-active' : ''}`}
-              onClick={() => {
-                setShowLangMenu(!showLangMenu);
-                setShowProfileMenu(false);
-              }}
-              aria-expanded={showLangMenu}
-              title="Select Language"
-              type="button"
-            >
-              <GlobeIcon size={15} />
-              <span>{selectedLang}</span>
-              <ChevronDownIcon size={12} className={`lang-chevron${showLangMenu ? ' is-open' : ''}`} />
-            </button>
-            {showLangMenu && (
-              <div className="dropdown-menu lang-menu animate-fadeIn">
-                <div className="dropdown-menu-header">
-                  <div className="dropdown-header-title-group">
-                    <GlobeIcon size={14} />
-                    <span className="dropdown-header-title">Display Language</span>
-                  </div>
-                  <span className="dropdown-header-pill">{selectedLang}</span>
-                </div>
-                <div className="dropdown-items-group">
-                  {languages.map((lang) => {
-                    const isSelected = selectedLang === lang.code;
-                    return (
-                      <button
-                        key={lang.code}
-                        className={`dropdown-item lang-item${isSelected ? ' is-active' : ''}`}
-                        onClick={() => {
-                          setSelectedLang(lang.code);
-                          setShowLangMenu(false);
-                        }}
-                        type="button"
-                      >
-                        <div className="lang-text-group">
-                          <span className="lang-native-name">{lang.native}</span>
-                          <span className="lang-sub-name">{lang.name}</span>
-                        </div>
-                        <div className="lang-item-right">
-                          <span className="lang-code-tag">{lang.code}</span>
-                          {isSelected && <CheckIcon size={14} className="lang-check-icon" />}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
+          {/* Language selector — Prime Video style */}
+          <LanguageSelector />
 
           {/* Apps grid icon */}
           <button className="icon-action-btn" title="Toggle Box Apps" aria-label="Apps" type="button">
@@ -212,7 +145,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               className={`avatar-btn${showProfileMenu ? ' is-active' : ''}`}
               onClick={() => {
                 setShowProfileMenu(!showProfileMenu);
-                setShowLangMenu(false);
               }}
               title="Profile & Settings"
               aria-label="Profile"

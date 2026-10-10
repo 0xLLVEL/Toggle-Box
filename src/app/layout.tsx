@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Outfit } from 'next/font/google';
 import './globals.css';
 import { WatchlistProvider } from '@/context/WatchlistContext';
+import { LanguageProvider } from '@/context/LanguageContext';
 
 const outfit = Outfit({
   subsets: ['latin'],
@@ -30,7 +31,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={outfit.variable}>
       <body suppressHydrationWarning>
-        <WatchlistProvider>{children}</WatchlistProvider>
+        <WatchlistProvider>
+          <LanguageProvider>{children}</LanguageProvider>
+        </WatchlistProvider>
       </body>
     </html>
   );

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -10,6 +10,12 @@ import {
   UserIcon,
   ChevronDownIcon,
   CheckIcon,
+  GlobeIcon,
+  SettingsIcon,
+  BookmarkIcon,
+  HelpIcon,
+  LogoutIcon,
+  SparklesIcon,
 } from './Icons';
 import { SearchModal } from './SearchModal';
 
@@ -33,10 +39,27 @@ export const Navbar: React.FC<NavbarProps> = ({
   // v0.2: scroll shadow
   const [isScrolled, setIsScrolled] = useState(false);
 
+  const langRef = useRef<HTMLDivElement>(null);
+  const profileRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 60);
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Click outside to close dropdown menus
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (langRef.current && !langRef.current.contains(e.target as Node)) {
+        setShowLangMenu(false);
+      }
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setShowProfileMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   // Global keyboard shortcut to open search modal (Ctrl+K, Cmd+K, or '/')
@@ -72,7 +95,14 @@ export const Navbar: React.FC<NavbarProps> = ({
     },
   ];
 
-  const languages = ['EN', 'ES', 'DE', 'FR', 'UR', 'HI'];
+  const languages = [
+    { code: 'EN', name: 'English', native: 'English' },
+    { code: 'ES', name: 'Spanish', native: 'Español' },
+    { code: 'DE', name: 'German', native: 'Deutsch' },
+    { code: 'FR', name: 'French', native: 'Français' },
+    { code: 'UR', name: 'Urdu', native: 'اردو' },
+    { code: 'HI', name: 'Hindi', native: 'हिन्दी' },
+  ];
 
   return (
     <>
@@ -118,9 +148,9 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
 
           {/* Language selector */}
-          <div className="dropdown-wrapper">
+          <div className="dropdown-wrapper" ref={langRef}>
             <button
-              className="lang-selector-btn"
+              className={`lang-selector-btn${showLangMenu ? ' is-active' : ''}`}
               onClick={() => {
                 setShowLangMenu(!showLangMenu);
                 setShowProfileMenu(false);
@@ -129,29 +159,44 @@ export const Navbar: React.FC<NavbarProps> = ({
               title="Select Language"
               type="button"
             >
+              <GlobeIcon size={15} />
               <span>{selectedLang}</span>
-              <ChevronDownIcon size={12} />
+              <ChevronDownIcon size={12} className={`lang-chevron${showLangMenu ? ' is-open' : ''}`} />
             </button>
             {showLangMenu && (
               <div className="dropdown-menu lang-menu animate-fadeIn">
-                {languages.map((lang) => (
-                  <button
-                    key={lang}
-                    className={`dropdown-item${selectedLang === lang ? ' active' : ''}`}
-                    onClick={() => {
-                      setSelectedLang(lang);
-                      setShowLangMenu(false);
-                    }}
-                    type="button"
-                  >
-                    {lang === 'EN' && 'English (EN)'}
-                    {lang === 'ES' && 'Español (ES)'}
-                    {lang === 'DE' && 'Deutsch (DE)'}
-                    {lang === 'FR' && 'Français (FR)'}
-                    {lang === 'UR' && 'اردو (UR)'}
-                    {lang === 'HI' && 'हिन्दी (HI)'}
-                  </button>
-                ))}
+                <div className="dropdown-menu-header">
+                  <div className="dropdown-header-title-group">
+                    <GlobeIcon size={14} />
+                    <span className="dropdown-header-title">Display Language</span>
+                  </div>
+                  <span className="dropdown-header-pill">{selectedLang}</span>
+                </div>
+                <div className="dropdown-items-group">
+                  {languages.map((lang) => {
+                    const isSelected = selectedLang === lang.code;
+                    return (
+                      <button
+                        key={lang.code}
+                        className={`dropdown-item lang-item${isSelected ? ' is-active' : ''}`}
+                        onClick={() => {
+                          setSelectedLang(lang.code);
+                          setShowLangMenu(false);
+                        }}
+                        type="button"
+                      >
+                        <div className="lang-text-group">
+                          <span className="lang-native-name">{lang.native}</span>
+                          <span className="lang-sub-name">{lang.name}</span>
+                        </div>
+                        <div className="lang-item-right">
+                          <span className="lang-code-tag">{lang.code}</span>
+                          {isSelected && <CheckIcon size={14} className="lang-check-icon" />}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             )}
           </div>
@@ -162,9 +207,9 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
 
           {/* User profile avatar */}
-          <div className="dropdown-wrapper">
+          <div className="dropdown-wrapper" ref={profileRef}>
             <button
-              className="avatar-btn"
+              className={`avatar-btn${showProfileMenu ? ' is-active' : ''}`}
               onClick={() => {
                 setShowProfileMenu(!showProfileMenu);
                 setShowLangMenu(false);
@@ -174,38 +219,100 @@ export const Navbar: React.FC<NavbarProps> = ({
               type="button"
             >
               <div className="avatar-circle">
-                <UserIcon size={18} />
+                <span className="avatar-initials">KM</span>
+                <span className="avatar-status-dot" />
               </div>
             </button>
             {showProfileMenu && (
               <div className="dropdown-menu profile-menu animate-fadeIn">
-                <div className="profile-header">
-                  <strong>Kazam Mahmood</strong>
-                  <span>Active Profile</span>
+                {/* Profile Header Card */}
+                <div className="profile-header-card">
+                  <div className="profile-avatar-large">
+                    <UserIcon size={20} />
+                  </div>
+                  <div className="profile-details">
+                    <strong className="profile-name">Kazam Mahmood</strong>
+                    <div className="profile-status-pill">
+                      <span className="status-indicator-green" />
+                      <span>Primary Profile</span>
+                    </div>
+                  </div>
                 </div>
+
+                {/* Membership Plan Pill / Card */}
+                <div className={`profile-tier-card ${isSubscribed ? 'is-vip' : 'is-free'}`}>
+                  <div className="tier-card-left">
+                    <div className="tier-icon-wrap">
+                      <SparklesIcon size={14} />
+                    </div>
+                    <div className="tier-text">
+                      <span className="tier-title">{isSubscribed ? 'TOGGLE+ Member' : 'Standard Pass'}</span>
+                      <span className="tier-desc">{isSubscribed ? 'Ultra HD 4K • Dolby Atmos' : 'Free Preview Mode'}</span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    className="tier-toggle-btn"
+                    onClick={() => setIsSubscribed(!isSubscribed)}
+                    title={isSubscribed ? 'Active membership' : 'Upgrade membership'}
+                  >
+                    {isSubscribed ? 'Active' : 'Upgrade'}
+                  </button>
+                </div>
+
                 <div className="menu-divider" />
-                <Link
-                  href="/mystuff"
-                  className="dropdown-item"
-                  onClick={() => setShowProfileMenu(false)}
-                >
-                  My Watchlist ({watchlistCount})
-                </Link>
+
+                {/* Navigation Items */}
+                <div className="dropdown-items-group">
+                  <Link
+                    href="/mystuff"
+                    className="dropdown-item profile-nav-item"
+                    onClick={() => setShowProfileMenu(false)}
+                  >
+                    <div className="item-icon-box">
+                      <BookmarkIcon size={16} />
+                    </div>
+                    <span className="item-label">My Watchlist</span>
+                    {watchlistCount > 0 && (
+                      <span className="item-counter-badge">{watchlistCount}</span>
+                    )}
+                  </Link>
+
+                  <button
+                    className="dropdown-item profile-nav-item"
+                    onClick={() => setShowProfileMenu(false)}
+                    type="button"
+                  >
+                    <div className="item-icon-box">
+                      <SettingsIcon size={16} />
+                    </div>
+                    <span className="item-label">Account & Settings</span>
+                  </button>
+
+                  <button
+                    className="dropdown-item profile-nav-item"
+                    onClick={() => setShowProfileMenu(false)}
+                    type="button"
+                  >
+                    <div className="item-icon-box">
+                      <HelpIcon size={16} />
+                    </div>
+                    <span className="item-label">Help & Support</span>
+                  </button>
+                </div>
+
+                <div className="menu-divider" />
+
+                {/* Sign out */}
                 <button
-                  className="dropdown-item"
-                  onClick={() => {
-                    setIsSubscribed(!isSubscribed);
-                    setShowProfileMenu(false);
-                  }}
+                  className="dropdown-item profile-nav-item sign-out-item"
+                  onClick={() => setShowProfileMenu(false)}
                   type="button"
                 >
-                  Subscription: {isSubscribed ? '✓ Premium VIP' : 'Free Trial'}
-                </button>
-                <button className="dropdown-item" onClick={() => setShowProfileMenu(false)} type="button">
-                  Account & Settings
-                </button>
-                <button className="dropdown-item" onClick={() => setShowProfileMenu(false)} type="button">
-                  Help & Support
+                  <div className="item-icon-box">
+                    <LogoutIcon size={16} />
+                  </div>
+                  <span className="item-label">Sign Out</span>
                 </button>
               </div>
             )}

@@ -589,22 +589,6 @@ export async function searchTmdb(query: string): Promise<MediaItem[]> {
 }
 
 /**
- * Fetch Trending media for search modal instant explore grid
- */
-export async function getTrendingMedia(): Promise<MediaItem[]> {
-  try {
-    const data = await fetchTmdb('/trending/all/day');
-    return (data.results || [])
-      .filter((i: any) => i.backdrop_path || i.poster_path)
-      .slice(0, 12)
-      .map((i: any) => formatTmdbItem(i));
-  } catch (error) {
-    console.error('Failed to fetch trending media:', error);
-    return [];
-  }
-}
-
-/**
  * Fetch YouTube trailer video key
  */
 export async function getTrailerKey(tmdbId: number, type: 'movie' | 'tv'): Promise<string | null> {

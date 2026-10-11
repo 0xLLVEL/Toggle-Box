@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { Suspense, useState, useEffect, useMemo } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import type { MediaItem, CategoryRow } from '@/types/media';
 import { getLiveTvRows, searchTmdb } from '@/services/tmdb';
 import { Navbar } from '@/components/Navbar';
@@ -11,8 +11,9 @@ import { Toast } from '@/components/Toast';
 import { HeroCarousel } from '@/components/HeroCarousel';
 import { useWatchlist } from '@/context/WatchlistContext';
 
-export default function TvPage() {
+function TvPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const {
     watchlist,
     toggleWatchlist,
@@ -24,6 +25,7 @@ export default function TvPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<MediaItem[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const selectedGenre = searchParams.get('genre')?.trim() || '';
 
   useEffect(() => {
     let isMounted = true;
@@ -61,9 +63,20 @@ export default function TvPage() {
     return () => clearTimeout(timeout);
   }, [searchQuery]);
 
+  const genreFilteredRows = useMemo(() => {
+    if (!selectedGenre) return tvRows;
+
+    return tvRows
+      .map((row) => ({
+        ...row,
+        items: row.items.filter((item) => item.genre.includes(selectedGenre)),
+      }))
+      .filter((row) => row.items.length > 0);
+  }, [tvRows, selectedGenre]);
+
   const carouselShows = useMemo(() => {
-    if (!tvRows.length) return [];
-    const pool = tvRows.flatMap((r) => r.items).filter((i) => !!i.backdropUrl);
+    if (!genreFilteredRows.length) return [];
+    const pool = genreFilteredRows.flatMap((r) => r.items).filter((i) => !!i.backdropUrl);
     const seen = new Set<string | number>();
     const unique: MediaItem[] = [];
     for (const item of pool) {
@@ -74,7 +87,7 @@ export default function TvPage() {
       if (unique.length >= 6) break;
     }
     return unique;
-  }, [tvRows]);
+  }, [genreFilteredRows]);
 
   const displayedRows = useMemo(() => {
     if (searchQuery.trim()) {
@@ -86,8 +99,8 @@ export default function TvPage() {
         },
       ];
     }
-    return tvRows;
-  }, [searchQuery, searchResults, tvRows]);
+    return genreFilteredRows;
+  }, [searchQuery, searchResults, genreFilteredRows]);
 
   return (
     <div className="toggle-box-app">
@@ -127,9 +140,17 @@ export default function TvPage() {
         ) : displayedRows.length === 0 ? (
           <div className="catalog-empty-state">
             <h3 className="catalog-empty-title">
-              {isSearching ? 'Searching series...' : 'No matching TV shows found'}
+              {isSearching
+                ? 'Searching series...'
+                : selectedGenre
+                  ? `No matching ${selectedGenre.toLowerCase()} TV shows found`
+                  : 'No matching TV shows found'}
             </h3>
-            <p className="catalog-empty-copy">Try searching for another show or title.</p>
+            <p className="catalog-empty-copy">
+              {selectedGenre
+                ? 'Try another genre from the dropdown or browse all TV shows.'
+                : 'Try searching for another show or title.'}
+            </p>
             {searchQuery && (
               <button
                 type="button"
@@ -156,5 +177,13 @@ export default function TvPage() {
       <Footer />
       <Toast message={toastMessage} />
     </div>
+  );
+}
+
+export default function TvPage() {
+  return (
+    <Suspense fallback={null}>
+      <TvPageContent />
+    </Suspense>
   );
 }

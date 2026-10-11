@@ -1,4 +1,11 @@
-import type { MediaItem, CategoryRow, EpisodeItem, MediaCredits, BadgeType, FullMediaDetail } from '@/types/media';
+import type {
+  MediaItem,
+  CategoryRow,
+  EpisodeItem,
+  MediaCredits,
+  BadgeType,
+  FullMediaDetail,
+} from '@/types/media';
 
 const TMDB_API_KEY = 'aa2cc9486c0a47e331576c9a49f07050';
 const BASE_URL = 'https://api.themoviedb.org/3';
@@ -43,7 +50,9 @@ function formatTmdbItem(
   rank?: number,
   customBadge?: BadgeType,
 ): MediaItem {
-  const isMovie = forcedType ? forcedType === 'movie' : raw.title !== undefined || raw.media_type === 'movie';
+  const isMovie = forcedType
+    ? forcedType === 'movie'
+    : raw.title !== undefined || raw.media_type === 'movie';
   const type: 'movie' | 'tv' = isMovie ? 'movie' : 'tv';
   const title = raw.title || raw.name || raw.original_title || raw.original_name || 'Untitled';
   const releaseDate = raw.release_date || raw.first_air_date || '';
@@ -67,7 +76,10 @@ function formatTmdbItem(
       badge = type === 'movie' ? 'NEW MOVIE' : 'NEW SEASON';
     } else if (raw.vote_average >= 8.0) {
       badge = 'MOST LIKED';
-    } else if (releaseDate && new Date(releaseDate).getTime() > Date.now() - 90 * 24 * 60 * 60 * 1000) {
+    } else if (
+      releaseDate &&
+      new Date(releaseDate).getTime() > Date.now() - 90 * 24 * 60 * 60 * 1000
+    ) {
       badge = type === 'movie' ? 'NEW MOVIE' : 'RECENTLY ADDED';
     }
   }
@@ -79,24 +91,14 @@ function formatTmdbItem(
     ? `${IMAGE_BASE_W780}${backdropPath}`
     : 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=780&auto=format&fit=crop';
 
-  const posterUrl = posterPath
-    ? `${IMAGE_BASE_W500}${posterPath}`
-    : backdropUrl;
+  const posterUrl = posterPath ? `${IMAGE_BASE_W500}${posterPath}` : backdropUrl;
 
   const voteAvg = raw.vote_average || 7.0;
   const matchScore = Math.min(99, Math.max(82, Math.round(voteAvg * 10) + 5));
 
-  const rating = raw.adult
-    ? '18+'
-    : voteAvg >= 8.0
-      ? '16+'
-      : voteAvg >= 7.0
-        ? '13+'
-        : 'All';
+  const rating = raw.adult ? '18+' : voteAvg >= 8.0 ? '16+' : voteAvg >= 7.0 ? '13+' : 'All';
 
-  const duration = isMovie
-    ? '2h 08m'
-    : 'Season 1';
+  const duration = isMovie ? '2h 08m' : 'Season 1';
 
   return {
     id: `${type}-${raw.id}`,
@@ -178,7 +180,11 @@ export async function getLiveStreamingRows(region: string = 'Pakistan'): Promise
       fetchTmdb('/discover/tv', { with_genres: '10759', sort_by: 'popularity.desc' }),
       fetchTmdb('/discover/tv', { with_genres: '18', sort_by: 'popularity.desc' }),
       fetchTmdb('/discover/movie', { with_genres: '10749,18', sort_by: 'popularity.desc' }),
-      fetchTmdb('/discover/movie', { with_genres: '18,36', sort_by: 'vote_average.desc', 'vote_count.gte': '500' }),
+      fetchTmdb('/discover/movie', {
+        with_genres: '18,36',
+        sort_by: 'vote_average.desc',
+        'vote_count.gte': '500',
+      }),
       fetchTmdb('/discover/movie', { with_genres: '878,14', sort_by: 'popularity.desc' }),
       fetchTmdb('/discover/movie', { with_genres: '80,53', sort_by: 'popularity.desc' }),
       fetchTmdb('/discover/movie', { with_genres: '10751,16', sort_by: 'popularity.desc' }),
@@ -190,12 +196,7 @@ export async function getLiveStreamingRows(region: string = 'Pakistan'): Promise
       .slice(0, 10)
       .map((i: any, idx: number) => {
         const topBadges: BadgeType[] = ['NEW MOVIE', 'NEW SEASON', 'NEW SERIES', 'NEW SERIES'];
-        return formatTmdbItem(
-          i,
-          'movie',
-          idx + 1,
-          topBadges[idx % topBadges.length] || 'TOP 10'
-        );
+        return formatTmdbItem(i, 'movie', idx + 1, topBadges[idx % topBadges.length] || 'TOP 10');
       });
 
     const featuredItems = (featuredData.results || [])
@@ -207,7 +208,7 @@ export async function getLiveStreamingRows(region: string = 'Pakistan'): Promise
           'NEW SERIES',
           'RECENTLY ADDED',
           'NEW SERIES',
-          'SERIES PREMIERE',
+          'NEW SERIES',
           'MOST LIKED',
         ];
         return formatTmdbItem(i, undefined, undefined, badges[idx % badges.length]);
@@ -217,7 +218,7 @@ export async function getLiveStreamingRows(region: string = 'Pakistan'): Promise
       .filter((i: any) => i.backdrop_path)
       .slice(0, 12)
       .map((i: any, idx: number) =>
-        formatTmdbItem(i, 'tv', undefined, idx < 2 ? 'NEW SERIES' : undefined)
+        formatTmdbItem(i, 'tv', undefined, idx < 2 ? 'NEW SERIES' : undefined),
       );
 
     const comedyItems = (comedyData.results || [])
@@ -234,7 +235,7 @@ export async function getLiveStreamingRows(region: string = 'Pakistan'): Promise
       .filter((i: any) => i.backdrop_path)
       .slice(0, 12)
       .map((i: any, idx: number) =>
-        formatTmdbItem(i, 'movie', undefined, idx < 4 ? 'NEW MOVIE' : undefined)
+        formatTmdbItem(i, 'movie', undefined, idx < 4 ? 'NEW MOVIE' : undefined),
       );
 
     const horrorItems = (horrorData.results || [])
@@ -246,7 +247,7 @@ export async function getLiveStreamingRows(region: string = 'Pakistan'): Promise
       .filter((i: any) => i.backdrop_path)
       .slice(0, 12)
       .map((i: any, idx: number) =>
-        formatTmdbItem(i, 'tv', undefined, idx < 2 ? 'NEW SERIES' : undefined)
+        formatTmdbItem(i, 'tv', undefined, idx < 2 ? 'NEW SERIES' : undefined),
       );
 
     const dramaItems = (dramaData.results || [])
@@ -258,7 +259,7 @@ export async function getLiveStreamingRows(region: string = 'Pakistan'): Promise
       .filter((i: any) => i.backdrop_path)
       .slice(0, 12)
       .map((i: any, idx: number) =>
-        formatTmdbItem(i, 'movie', undefined, idx < 2 ? 'NEW MOVIE' : undefined)
+        formatTmdbItem(i, 'movie', undefined, idx < 2 ? 'NEW MOVIE' : undefined),
       );
 
     const awardItems = (awardData.results || [])
@@ -285,7 +286,7 @@ export async function getLiveStreamingRows(region: string = 'Pakistan'): Promise
       .filter((i: any) => i.backdrop_path)
       .slice(0, 12)
       .map((i: any, idx: number) =>
-        formatTmdbItem(i, 'tv', undefined, idx < 2 ? 'NEW SERIES' : undefined)
+        formatTmdbItem(i, 'tv', undefined, idx < 2 ? 'NEW SERIES' : undefined),
       );
 
     return [
@@ -420,32 +421,50 @@ export async function getLiveMovieRows(): Promise<CategoryRow[]> {
       {
         id: 'trending-movies',
         title: 'Trending Movies This Week',
-        items: (trending.results || []).filter((i: any) => i.backdrop_path).slice(0, 10).map((i: any) => formatTmdbItem(i, 'movie', undefined, 'NEW MOVIE')),
+        items: (trending.results || [])
+          .filter((i: any) => i.backdrop_path)
+          .slice(0, 10)
+          .map((i: any) => formatTmdbItem(i, 'movie', undefined, 'NEW MOVIE')),
       },
       {
         id: 'action-movies',
         title: 'Blockbuster Action & Adventure',
-        items: (action.results || []).filter((i: any) => i.backdrop_path).slice(0, 10).map((i: any) => formatTmdbItem(i, 'movie', undefined, 'TOP 10')),
+        items: (action.results || [])
+          .filter((i: any) => i.backdrop_path)
+          .slice(0, 10)
+          .map((i: any) => formatTmdbItem(i, 'movie', undefined, 'TOP 10')),
       },
       {
         id: 'top-rated-movies',
         title: 'Critically Acclaimed & Award Winners',
-        items: (topRated.results || []).filter((i: any) => i.backdrop_path).slice(0, 10).map((i: any) => formatTmdbItem(i, 'movie', undefined, 'MOST LIKED')),
+        items: (topRated.results || [])
+          .filter((i: any) => i.backdrop_path)
+          .slice(0, 10)
+          .map((i: any) => formatTmdbItem(i, 'movie', undefined, 'MOST LIKED')),
       },
       {
         id: 'comedy-hits',
         title: 'Laugh-Out-Loud Comedies',
-        items: (comedy.results || []).filter((i: any) => i.backdrop_path).slice(0, 10).map((i: any) => formatTmdbItem(i, 'movie')),
+        items: (comedy.results || [])
+          .filter((i: any) => i.backdrop_path)
+          .slice(0, 10)
+          .map((i: any) => formatTmdbItem(i, 'movie')),
       },
       {
         id: 'scifi-movies',
         title: 'Sci-Fi & Cosmic Worlds',
-        items: (scifi.results || []).filter((i: any) => i.backdrop_path).slice(0, 10).map((i: any) => formatTmdbItem(i, 'movie')),
+        items: (scifi.results || [])
+          .filter((i: any) => i.backdrop_path)
+          .slice(0, 10)
+          .map((i: any) => formatTmdbItem(i, 'movie')),
       },
       {
         id: 'thriller-movies',
         title: 'Psychological Thrillers & Mystery',
-        items: (horror.results || []).filter((i: any) => i.backdrop_path).slice(0, 10).map((i: any) => formatTmdbItem(i, 'movie')),
+        items: (horror.results || [])
+          .filter((i: any) => i.backdrop_path)
+          .slice(0, 10)
+          .map((i: any) => formatTmdbItem(i, 'movie')),
       },
     ];
   } catch (error) {
@@ -472,32 +491,50 @@ export async function getLiveTvRows(): Promise<CategoryRow[]> {
       {
         id: 'trending-tv',
         title: 'Trending Shows Today',
-        items: (trending.results || []).filter((i: any) => i.backdrop_path).slice(0, 10).map((i: any) => formatTmdbItem(i, 'tv', undefined, 'NEW SEASON')),
+        items: (trending.results || [])
+          .filter((i: any) => i.backdrop_path)
+          .slice(0, 10)
+          .map((i: any) => formatTmdbItem(i, 'tv', undefined, 'NEW SEASON')),
       },
       {
         id: 'top-rated-tv',
         title: 'Prime All-Time Best Series',
-        items: (topRated.results || []).filter((i: any) => i.backdrop_path).slice(0, 10).map((i: any) => formatTmdbItem(i, 'tv', undefined, 'MOST LIKED')),
+        items: (topRated.results || [])
+          .filter((i: any) => i.backdrop_path)
+          .slice(0, 10)
+          .map((i: any) => formatTmdbItem(i, 'tv', undefined, 'MOST LIKED')),
       },
       {
         id: 'airing-tv',
         title: 'New Episodes Airing This Week',
-        items: (onAir.results || []).filter((i: any) => i.backdrop_path).slice(0, 10).map((i: any) => formatTmdbItem(i, 'tv', undefined, 'NEW EPISODE')),
+        items: (onAir.results || [])
+          .filter((i: any) => i.backdrop_path)
+          .slice(0, 10)
+          .map((i: any) => formatTmdbItem(i, 'tv', undefined, 'NEW EPISODE')),
       },
       {
         id: 'crime-tv',
         title: 'Gripping Crime & Detective Series',
-        items: (crime.results || []).filter((i: any) => i.backdrop_path).slice(0, 10).map((i: any) => formatTmdbItem(i, 'tv')),
+        items: (crime.results || [])
+          .filter((i: any) => i.backdrop_path)
+          .slice(0, 10)
+          .map((i: any) => formatTmdbItem(i, 'tv')),
       },
       {
         id: 'scifi-fantasy-tv',
         title: 'Epic Fantasy & Sci-Fi Worlds',
-        items: (scifi.results || []).filter((i: any) => i.backdrop_path).slice(0, 10).map((i: any) => formatTmdbItem(i, 'tv', undefined, 'NEW SERIES')),
+        items: (scifi.results || [])
+          .filter((i: any) => i.backdrop_path)
+          .slice(0, 10)
+          .map((i: any) => formatTmdbItem(i, 'tv', undefined, 'NEW SERIES')),
       },
       {
         id: 'drama-tv',
         title: 'Compelling High-Stakes Dramas',
-        items: (drama.results || []).filter((i: any) => i.backdrop_path).slice(0, 10).map((i: any) => formatTmdbItem(i, 'tv')),
+        items: (drama.results || [])
+          .filter((i: any) => i.backdrop_path)
+          .slice(0, 10)
+          .map((i: any) => formatTmdbItem(i, 'tv')),
       },
     ];
   } catch (error) {
@@ -539,7 +576,10 @@ export async function searchTmdb(query: string): Promise<MediaItem[]> {
   try {
     const data = await fetchTmdb('/search/multi', { query });
     return (data.results || [])
-      .filter((i: any) => (i.media_type === 'movie' || i.media_type === 'tv') && (i.backdrop_path || i.poster_path))
+      .filter(
+        (i: any) =>
+          (i.media_type === 'movie' || i.media_type === 'tv') && (i.backdrop_path || i.poster_path),
+      )
       .slice(0, 18)
       .map((i: any) => formatTmdbItem(i));
   } catch (error) {
@@ -609,7 +649,10 @@ export async function getMediaCredits(tmdbId: number, type: 'movie' | 'tv'): Pro
 /**
  * Fetch real TV episodes
  */
-export async function getTvEpisodes(tmdbId: number, seasonNumber: number = 1): Promise<EpisodeItem[]> {
+export async function getTvEpisodes(
+  tmdbId: number,
+  seasonNumber: number = 1,
+): Promise<EpisodeItem[]> {
   try {
     const endpoint = `/tv/${tmdbId}/season/${seasonNumber}`;
     const data = await fetchTmdb(endpoint);
@@ -634,7 +677,8 @@ const DUPAHIYA_EPISODES: EpisodeItem[] = [
     airDate: 'Oct 1, 2026',
     hasCc: true,
     desc: 'The winter winds bring new chaos to Dhadakpur! Roshni struggles with her studies while Banwari discovers surprising news about the disputed mobile tower land.',
-    stillUrl: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=500&auto=format&fit=crop',
+    stillUrl:
+      'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=500&auto=format&fit=crop',
   },
   {
     num: 2,
@@ -644,7 +688,8 @@ const DUPAHIYA_EPISODES: EpisodeItem[] = [
     airDate: 'Oct 1, 2026',
     hasCc: true,
     desc: 'Banwari is determined to get the mobile tower up- by hook or by crook. Meanwhile, Bhugol takes on an unexpected challenge in the village.',
-    stillUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&auto=format&fit=crop',
+    stillUrl:
+      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&auto=format&fit=crop',
   },
   {
     num: 3,
@@ -654,7 +699,8 @@ const DUPAHIYA_EPISODES: EpisodeItem[] = [
     airDate: 'Oct 1, 2026',
     hasCc: true,
     desc: "Mithlesh's investigation leads him to Pratham Kumar, closing in on the contract while Banwari rallies local support.",
-    stillUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=500&auto=format&fit=crop',
+    stillUrl:
+      'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=500&auto=format&fit=crop',
   },
   {
     num: 4,
@@ -664,7 +710,8 @@ const DUPAHIYA_EPISODES: EpisodeItem[] = [
     airDate: 'Oct 1, 2026',
     hasCc: true,
     desc: "Banwari's tower work sparks a village showdown as Pushpalata confronts the local administration and police.",
-    stillUrl: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=500&auto=format&fit=crop',
+    stillUrl:
+      'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=500&auto=format&fit=crop',
   },
   {
     num: 5,
@@ -674,7 +721,8 @@ const DUPAHIYA_EPISODES: EpisodeItem[] = [
     airDate: 'Oct 1, 2026',
     hasCc: true,
     desc: 'Mithlesh gets his hands on a crucial clue. Desperate to get the villagers to cooperate, an unlikely alliance is formed.',
-    stillUrl: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=500&auto=format&fit=crop',
+    stillUrl:
+      'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=500&auto=format&fit=crop',
   },
   {
     num: 6,
@@ -684,7 +732,8 @@ const DUPAHIYA_EPISODES: EpisodeItem[] = [
     airDate: 'Oct 1, 2026',
     hasCc: true,
     desc: 'Mithlesh recruits Bhugol, Roshni, and Amavas for a risky undercover operation to unveil the true intentions behind the scheme.',
-    stillUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=500&auto=format&fit=crop',
+    stillUrl:
+      'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=500&auto=format&fit=crop',
   },
   {
     num: 7,
@@ -694,7 +743,8 @@ const DUPAHIYA_EPISODES: EpisodeItem[] = [
     airDate: 'Oct 1, 2026',
     hasCc: true,
     desc: 'Roshni comes face-to-face with Kuber-he humiliates her, but she refuses to give up her ambitions for Dhadakpur.',
-    stillUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop',
+    stillUrl:
+      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop',
   },
   {
     num: 8,
@@ -704,7 +754,8 @@ const DUPAHIYA_EPISODES: EpisodeItem[] = [
     airDate: 'Oct 1, 2026',
     hasCc: true,
     desc: 'Roshni and Bhugol reach the exam center; Kuber refuses to enter as tensions reach boiling point in the dramatic conclusion.',
-    stillUrl: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=500&auto=format&fit=crop',
+    stillUrl:
+      'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=500&auto=format&fit=crop',
   },
 ];
 
@@ -718,8 +769,10 @@ const DUPAHIYA_RECOMMENDATIONS: MediaItem[] = [
     year: 2025,
     genre: ['Crime', 'Drama'],
     synopsis: 'A gritty crime thriller uncovering deceit in a dusty heartland town.',
-    backdropUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=780&auto=format&fit=crop',
-    posterUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=500&auto=format&fit=crop',
+    backdropUrl:
+      'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=780&auto=format&fit=crop',
+    posterUrl:
+      'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=500&auto=format&fit=crop',
     type: 'movie',
     matchScore: 94,
   },
@@ -732,9 +785,12 @@ const DUPAHIYA_RECOMMENDATIONS: MediaItem[] = [
     duration: 'Season 3',
     year: 2024,
     genre: ['Comedy', 'Drama'],
-    synopsis: 'An engineering graduate takes up a job as a secretary of a gram panchayat in a remote village.',
-    backdropUrl: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=780&auto=format&fit=crop',
-    posterUrl: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=500&auto=format&fit=crop',
+    synopsis:
+      'An engineering graduate takes up a job as a secretary of a gram panchayat in a remote village.',
+    backdropUrl:
+      'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=780&auto=format&fit=crop',
+    posterUrl:
+      'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=500&auto=format&fit=crop',
     type: 'tv',
     matchScore: 98,
   },
@@ -746,9 +802,12 @@ const DUPAHIYA_RECOMMENDATIONS: MediaItem[] = [
     duration: 'Season 2',
     year: 2024,
     genre: ['Drama'],
-    synopsis: 'The journey of three UPSC aspirants navigating friendship, ambition, and heartbreak in Old Rajinder Nagar.',
-    backdropUrl: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=780&auto=format&fit=crop',
-    posterUrl: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=500&auto=format&fit=crop',
+    synopsis:
+      'The journey of three UPSC aspirants navigating friendship, ambition, and heartbreak in Old Rajinder Nagar.',
+    backdropUrl:
+      'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=780&auto=format&fit=crop',
+    posterUrl:
+      'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=500&auto=format&fit=crop',
     type: 'tv',
     matchScore: 96,
   },
@@ -760,9 +819,12 @@ const DUPAHIYA_RECOMMENDATIONS: MediaItem[] = [
     duration: 'Season 1',
     year: 2024,
     genre: ['Legal Drama', 'Crime'],
-    synopsis: 'Two college friends face off against each other in high-stakes courtroom battles across India.',
-    backdropUrl: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=780&auto=format&fit=crop',
-    posterUrl: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=500&auto=format&fit=crop',
+    synopsis:
+      'Two college friends face off against each other in high-stakes courtroom battles across India.',
+    backdropUrl:
+      'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=780&auto=format&fit=crop',
+    posterUrl:
+      'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=500&auto=format&fit=crop',
     type: 'tv',
     matchScore: 92,
   },
@@ -774,9 +836,12 @@ const DUPAHIYA_RECOMMENDATIONS: MediaItem[] = [
     duration: '2h 05m',
     year: 2024,
     genre: ['Action', 'Thriller'],
-    synopsis: 'Firefighters fight an inferno that threatens an entire metropolis while battling personal demons.',
-    backdropUrl: 'https://images.unsplash.com/photo-1496247749665-49cf5b104999?w=780&auto=format&fit=crop',
-    posterUrl: 'https://images.unsplash.com/photo-1496247749665-49cf5b104999?w=500&auto=format&fit=crop',
+    synopsis:
+      'Firefighters fight an inferno that threatens an entire metropolis while battling personal demons.',
+    backdropUrl:
+      'https://images.unsplash.com/photo-1496247749665-49cf5b104999?w=780&auto=format&fit=crop',
+    posterUrl:
+      'https://images.unsplash.com/photo-1496247749665-49cf5b104999?w=500&auto=format&fit=crop',
     type: 'movie',
     matchScore: 91,
   },
@@ -788,9 +853,12 @@ const DUPAHIYA_RECOMMENDATIONS: MediaItem[] = [
     duration: 'Season 3',
     year: 2024,
     genre: ['Crime', 'Action'],
-    synopsis: 'A shocking incident at a wedding procession ignites a brutal gang war for the throne of Mirzapur.',
-    backdropUrl: 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?w=780&auto=format&fit=crop',
-    posterUrl: 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?w=500&auto=format&fit=crop',
+    synopsis:
+      'A shocking incident at a wedding procession ignites a brutal gang war for the throne of Mirzapur.',
+    backdropUrl:
+      'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?w=780&auto=format&fit=crop',
+    posterUrl:
+      'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?w=500&auto=format&fit=crop',
     type: 'tv',
     matchScore: 97,
   },
@@ -805,7 +873,8 @@ const DUPAHIYA_DETAILS: FullMediaDetail = {
   synopsis:
     "Dhadakpur is back! Banwari's barren land is chosen for a mobile tower-but villagers link everything from typhoid to tsunamis to it. Bhugol is famous now, but only as a female influencer. Roshni's SSC challenge seems insurmountable but Amavas is right there to shake things up.",
   backdropUrl: '/api/media/media_1791277209569.png',
-  posterUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop',
+  posterUrl:
+    'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop',
   year: 2026,
   duration: '2 seasons',
   rating: '13+',
@@ -833,13 +902,7 @@ const DUPAHIYA_DETAILS: FullMediaDetail = {
     'हिन्दी Dialogue Boost: High',
     'English',
   ],
-  subtitles: [
-    'English [CC]',
-    'हिन्दी [CC]',
-    'العربية',
-    'Français',
-    'Español',
-  ],
+  subtitles: ['English [CC]', 'हिन्दी [CC]', 'العربية', 'Français', 'Español'],
   recommendations: DUPAHIYA_RECOMMENDATIONS,
   type: 'tv',
   isOriginal: true,
@@ -872,23 +935,39 @@ export async function getFullMediaDetails(id: string): Promise<FullMediaDetail> 
     });
 
     const title = data.title || data.name || 'Dupahiya';
-    const releaseYear = data.release_date || data.first_air_date ? new Date(data.release_date || data.first_air_date).getFullYear() : 2026;
+    const releaseYear =
+      data.release_date || data.first_air_date
+        ? new Date(data.release_date || data.first_air_date).getFullYear()
+        : 2026;
     const duration = data.runtime
       ? `${Math.floor(data.runtime / 60)} h ${data.runtime % 60} min`
       : data.number_of_seasons
-      ? `${data.number_of_seasons} seasons`
-      : '1 season';
+        ? `${data.number_of_seasons} seasons`
+        : '1 season';
     const imdb = (data.vote_average ? data.vote_average.toFixed(1) : '7.5') + '/10';
-    const backdropUrl = data.backdrop_path ? `https://image.tmdb.org/t/p/original${data.backdrop_path}` : '/api/media/media_1791277209569.png';
-    const posterUrl = data.poster_path ? `https://image.tmdb.org/t/p/w500${data.poster_path}` : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop';
-    
-    const cast = (data.credits?.cast || []).slice(0, 8).map((c: any) => c.name);
-    const directors = (data.credits?.crew || []).filter((c: any) => c.job === 'Director').map((c: any) => c.name);
-    const producers = (data.credits?.crew || []).filter((c: any) => c.job === 'Producer' || c.job === 'Executive Producer').slice(0, 5).map((c: any) => c.name);
-    
-    const trailer = (data.videos?.results || []).find((v: any) => v.site === 'YouTube' && v.type === 'Trailer')?.key || null;
+    const backdropUrl = data.backdrop_path
+      ? `https://image.tmdb.org/t/p/original${data.backdrop_path}`
+      : '/api/media/media_1791277209569.png';
+    const posterUrl = data.poster_path
+      ? `https://image.tmdb.org/t/p/w500${data.poster_path}`
+      : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop';
 
-    const recs: MediaItem[] = (data.recommendations?.results || []).slice(0, 10).map((r: any) => formatTmdbItem(r, rawType, undefined, 'NEW MOVIE'));
+    const cast = (data.credits?.cast || []).slice(0, 8).map((c: any) => c.name);
+    const directors = (data.credits?.crew || [])
+      .filter((c: any) => c.job === 'Director')
+      .map((c: any) => c.name);
+    const producers = (data.credits?.crew || [])
+      .filter((c: any) => c.job === 'Producer' || c.job === 'Executive Producer')
+      .slice(0, 5)
+      .map((c: any) => c.name);
+
+    const trailer =
+      (data.videos?.results || []).find((v: any) => v.site === 'YouTube' && v.type === 'Trailer')
+        ?.key || null;
+
+    const recs: MediaItem[] = (data.recommendations?.results || [])
+      .slice(0, 10)
+      .map((r: any) => formatTmdbItem(r, rawType, undefined, 'NEW MOVIE'));
 
     let episodes: EpisodeItem[] = [];
     if (rawType === 'tv') {

@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { Suspense, useState, useEffect, useMemo } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import type { MediaItem, CategoryRow } from '@/types/media';
 import { getLiveMovieRows, searchTmdb } from '@/services/tmdb';
 import { Navbar } from '@/components/Navbar';
@@ -11,8 +11,9 @@ import { Toast } from '@/components/Toast';
 import { HeroCarousel } from '@/components/HeroCarousel';
 import { useWatchlist } from '@/context/WatchlistContext';
 
-export default function MoviesPage() {
+function MoviesPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const {
     watchlist,
     toggleWatchlist,
@@ -24,6 +25,7 @@ export default function MoviesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<MediaItem[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const selectedGenre = searchParams.get('genre')?.trim() || '';
 
   useEffect(() => {
     let isMounted = true;
@@ -62,9 +64,20 @@ export default function MoviesPage() {
     return () => clearTimeout(timeout);
   }, [searchQuery]);
 
+  const genreFilteredRows = useMemo(() => {
+    if (!selectedGenre) return movieRows;
+
+    return movieRows
+      .map((row) => ({
+        ...row,
+        items: row.items.filter((item) => item.genre.includes(selectedGenre)),
+      }))
+      .filter((row) => row.items.length > 0);
+  }, [movieRows, selectedGenre]);
+
   const carouselMovies = useMemo(() => {
-    if (!movieRows.length) return [];
-    const pool = movieRows.flatMap((r) => r.items).filter((i) => !!i.backdropUrl);
+    if (!genreFilteredRows.length) return [];
+    const pool = genreFilteredRows.flatMap((r) => r.items).filter((i) => !!i.backdropUrl);
     const seen = new Set<string | number>();
     const unique: MediaItem[] = [];
     for (const item of pool) {
@@ -75,7 +88,7 @@ export default function MoviesPage() {
       if (unique.length >= 6) break;
     }
     return unique;
-  }, [movieRows]);
+  }, [genreFilteredRows]);
 
   const displayedRows = useMemo(() => {
     if (searchQuery.trim()) {
@@ -87,8 +100,8 @@ export default function MoviesPage() {
         },
       ];
     }
-    return movieRows;
-  }, [searchQuery, searchResults, movieRows]);
+    return genreFilteredRows;
+  }, [searchQuery, searchResults, genreFilteredRows]);
 
   return (
     <div className="toggle-box-app">
@@ -128,9 +141,17 @@ export default function MoviesPage() {
         ) : displayedRows.length === 0 ? (
           <div className="catalog-empty-state">
             <h3 className="catalog-empty-title">
-              {isSearching ? 'Searching movies...' : 'No matching movies found'}
+              {isSearching
+                ? 'Searching movies...'
+                : selectedGenre
+                  ? `No matching ${selectedGenre.toLowerCase()} movies found`
+                  : 'No matching movies found'}
             </h3>
-            <p className="catalog-empty-copy">Try searching for another movie title.</p>
+            <p className="catalog-empty-copy">
+              {selectedGenre
+                ? 'Try another genre from the dropdown or browse all movies.'
+                : 'Try searching for another movie title.'}
+            </p>
             {searchQuery && (
               <button
                 type="button"
@@ -157,5 +178,13 @@ export default function MoviesPage() {
       <Footer />
       <Toast message={toastMessage} />
     </div>
+  );
+}
+
+export default function MoviesPage() {
+  return (
+    <Suspense fallback={null}>
+      <MoviesPageContent />
+    </Suspense>
   );
 }

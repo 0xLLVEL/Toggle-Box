@@ -18,6 +18,63 @@ import {
 import { SearchModal } from './SearchModal';
 import { LanguageSelector } from './LanguageSelector';
 
+const genreDropdownItems = [
+  {
+    id: 'action',
+    label: 'Action',
+    href: '/movies?genre=Action',
+    description: 'Blockbusters, chases, and big-screen adrenaline.',
+  },
+  {
+    id: 'comedy',
+    label: 'Comedy',
+    href: '/movies?genre=Comedy',
+    description: 'Light watches and easy picks for any night.',
+  },
+  {
+    id: 'crime',
+    label: 'Crime',
+    href: '/tv?genre=Crime',
+    description: 'Detectives, tension, and sharp mystery series.',
+  },
+  {
+    id: 'drama',
+    label: 'Drama',
+    href: '/tv?genre=Drama',
+    description: 'Character-led stories with high-stakes arcs.',
+  },
+  {
+    id: 'scifi',
+    label: 'Sci-Fi',
+    href: '/movies?genre=Sci-Fi',
+    description: 'Future worlds, fantasy edges, and epic scale.',
+  },
+  {
+    id: 'romance',
+    label: 'Romance',
+    href: '/movies?genre=Romance',
+    description: 'Chemistry, longing, and modern love stories.',
+  },
+  {
+    id: 'horror',
+    label: 'Horror',
+    href: '/movies?genre=Horror',
+    description: 'Dark, tense, and built for late-night viewing.',
+  },
+  {
+    id: 'family',
+    label: 'Family',
+    href: '/movies?genre=Family',
+    description: 'Family-friendly picks and comfort watches.',
+  },
+  {
+    id: 'docs',
+    label: 'Docs',
+    href: '/movies?genre=Documentary',
+    description: 'True stories, real people, and standout docs.',
+  },
+] as const;
+
 interface NavbarProps {
   searchQuery?: string;
   onSearchChange?: (q: string) => void;
@@ -32,11 +89,13 @@ export const Navbar: React.FC<NavbarProps> = ({
   const pathname = usePathname();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showGenresMenu, setShowGenresMenu] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
   // v0.2: scroll shadow
   const [isScrolled, setIsScrolled] = useState(false);
 
   const profileRef = useRef<HTMLDivElement>(null);
+  const genresRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 60);
@@ -49,6 +108,9 @@ export const Navbar: React.FC<NavbarProps> = ({
     const handleClickOutside = (e: MouseEvent) => {
       if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
         setShowProfileMenu(false);
+      }
+      if (genresRef.current && !genresRef.current.contains(e.target as Node)) {
+        setShowGenresMenu(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -101,9 +163,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           <nav className="nav-links" aria-label="Main Navigation">
             {navLinks.map((link) => {
               const isActive =
-                link.href === '/'
-                  ? pathname === '/'
-                  : pathname.startsWith(link.href);
+                link.href === '/' ? pathname === '/' : pathname.startsWith(link.href);
 
               return (
                 <Link
@@ -131,19 +191,64 @@ export const Navbar: React.FC<NavbarProps> = ({
             <SearchIcon size={20} />
           </button>
 
-          {/* Language selector — Prime Video style */}
+          {/* Language selector */}
           <LanguageSelector />
 
-          {/* Apps grid icon */}
-          <button className="icon-action-btn" title="Toggle Box Apps" aria-label="Apps" type="button">
-            <GridAppsIcon size={18} />
-          </button>
+          {/* Genres menu */}
+          <div className="dropdown-wrapper" ref={genresRef}>
+            <button
+              className={`icon-action-btn genre-apps-trigger${showGenresMenu ? ' is-active' : ''}`}
+              title="Browse Genres"
+              aria-label="Browse Genres"
+              aria-haspopup="menu"
+              aria-expanded={showGenresMenu}
+              type="button"
+              onClick={() => {
+                setShowGenresMenu((prev) => !prev);
+                setShowProfileMenu(false);
+              }}
+            >
+              <GridAppsIcon size={18} />
+            </button>
+            {showGenresMenu && (
+              <div className="dropdown-menu genre-menu animate-fadeIn">
+                <div className="dropdown-menu-header">
+                  <div className="dropdown-header-title-group">
+                    <GridAppsIcon size={14} />
+                    <span>Browse by Genre</span>
+                  </div>
+                </div>
+
+                <div className="genre-menu-lead">
+                  <strong className="genre-menu-title">Pick a lane</strong>
+                  <p className="genre-menu-copy">
+                    Jump straight into the closest movies or TV shelf without the extra hub page.
+                  </p>
+                </div>
+
+                <div className="genre-menu-grid">
+                  {genreDropdownItems.map((item) => (
+                    <Link
+                      key={item.id}
+                      href={item.href}
+                      className="genre-menu-tile"
+                      onClick={() => setShowGenresMenu(false)}
+                    >
+                      <span className="genre-menu-tile-title">{item.label}</span>
+                      <span className="genre-menu-tile-description">{item.description}</span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* User profile avatar */}
           <div className="dropdown-wrapper" ref={profileRef}>
             <button
               className={`avatar-btn${showProfileMenu ? ' is-active' : ''}`}
               onClick={() => {
+                setShowGenresMenu(false);
                 setShowProfileMenu(!showProfileMenu);
               }}
               title="Profile & Settings"
@@ -178,8 +283,12 @@ export const Navbar: React.FC<NavbarProps> = ({
                       <SparklesIcon size={14} />
                     </div>
                     <div className="tier-text">
-                      <span className="tier-title">{isSubscribed ? 'TOGGLE+ Member' : 'Standard Pass'}</span>
-                      <span className="tier-desc">{isSubscribed ? 'Ultra HD 4K • Dolby Atmos' : 'Free Preview Mode'}</span>
+                      <span className="tier-title">
+                        {isSubscribed ? 'TOGGLE+ Member' : 'Standard Pass'}
+                      </span>
+                      <span className="tier-desc">
+                        {isSubscribed ? 'Ultra HD 4K • Dolby Atmos' : 'Free Preview Mode'}
+                      </span>
                     </div>
                   </div>
                   <button

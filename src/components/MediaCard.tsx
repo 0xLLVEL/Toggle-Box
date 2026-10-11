@@ -110,26 +110,16 @@ export const MediaCard: React.FC<MediaCardProps> = ({
             <div className="card-quality-tag">{item.quality[0]}</div>
           )}
 
-          {/* Card Title & Metadata */}
-          <div className="card-poster-content">
-            <h3 className="card-poster-title">{item.title}</h3>
-            <div className="card-poster-meta">
-              <span>{item.year}</span>
-              <span className="card-meta-dot" aria-hidden="true">
-                •
-              </span>
-              <span>{item.type === 'tv' ? 'Series' : 'Movie'}</span>
-              <span className="card-meta-lock" title="Included with Toggle Box">
-                <ToggleGoldBadgeIcon size={12} aria-hidden="true" />
-              </span>
-            </div>
-            {item.genre && item.genre[0] && (
-              <span className="card-genre-sub">{item.genre.slice(0, 2).join(' • ')}</span>
-            )}
+          {/* Included-with-ToggleBox gold badge — stays visible on the card face */}
+          <div className="card-gold-badge" title="Included with Toggle Box">
+            <ToggleGoldBadgeIcon size={12} aria-hidden="true" />
           </div>
 
-          {/* Hover Slide-up Actions & Metadata */}
+          {/* Hover Slide-up Actions & Metadata (title is revealed here on hover) */}
           <div className={`card-hover-drawer ${isHovered ? 'drawer-visible' : ''}`}>
+            {/* Title — revealed on hover (hidden on the card face by default) */}
+            <h3 className="card-drawer-title">{item.title}</h3>
+
             {/* Quick Action buttons */}
             <div className="card-quick-actions" onClick={(e) => e.stopPropagation()}>
               <button

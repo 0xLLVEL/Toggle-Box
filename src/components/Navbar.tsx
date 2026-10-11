@@ -261,7 +261,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               </div>
             </button>
             {showProfileMenu && (
-              <div className="dropdown-menu profile-menu animate-fadeIn">
+              <div className="dropdown-menu profile-menu">
                 {/* Profile Header Card */}
                 <div className="profile-header-card">
                   <div className="profile-avatar-large">
@@ -276,12 +276,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                   </div>
                 </div>
 
-                {/* Membership Plan Pill / Card */}
+                {/* Membership Plan — Prime-style subtle row */}
                 <div className={`profile-tier-card ${isSubscribed ? 'is-vip' : 'is-free'}`}>
                   <div className="tier-card-left">
-                    <div className="tier-icon-wrap">
-                      <SparklesIcon size={14} />
-                    </div>
+                    <SparklesIcon size={16} className="tier-icon-inline" />
                     <div className="tier-text">
                       <span className="tier-title">
                         {isSubscribed ? 'TOGGLE+ Member' : 'Standard Pass'}
@@ -303,16 +301,14 @@ export const Navbar: React.FC<NavbarProps> = ({
 
                 <div className="menu-divider" />
 
-                {/* Navigation Items */}
+                {/* Navigation Items — plain text rows, inline icons (Prime style) */}
                 <div className="dropdown-items-group">
                   <Link
                     href="/mystuff"
                     className="dropdown-item profile-nav-item"
                     onClick={() => setShowProfileMenu(false)}
                   >
-                    <div className="item-icon-box">
-                      <BookmarkIcon size={16} />
-                    </div>
+                    <BookmarkIcon size={17} className="profile-nav-icon" />
                     <span className="item-label">My Watchlist</span>
                     {watchlistCount > 0 && (
                       <span className="item-counter-badge">{watchlistCount}</span>
@@ -324,10 +320,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                     onClick={() => setShowProfileMenu(false)}
                     type="button"
                   >
-                    <div className="item-icon-box">
-                      <SettingsIcon size={16} />
-                    </div>
-                    <span className="item-label">Account & Settings</span>
+                    <SettingsIcon size={17} className="profile-nav-icon" />
+                    <span className="item-label">Account &amp; Settings</span>
                   </button>
 
                   <button
@@ -335,10 +329,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                     onClick={() => setShowProfileMenu(false)}
                     type="button"
                   >
-                    <div className="item-icon-box">
-                      <HelpIcon size={16} />
-                    </div>
-                    <span className="item-label">Help & Support</span>
+                    <HelpIcon size={17} className="profile-nav-icon" />
+                    <span className="item-label">Help &amp; Support</span>
                   </button>
                 </div>
 
@@ -350,9 +342,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   onClick={() => setShowProfileMenu(false)}
                   type="button"
                 >
-                  <div className="item-icon-box">
-                    <LogoutIcon size={16} />
-                  </div>
+                  <LogoutIcon size={17} className="profile-nav-icon" />
                   <span className="item-label">Sign Out</span>
                 </button>
               </div>

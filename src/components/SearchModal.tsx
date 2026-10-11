@@ -3,12 +3,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import type { MediaItem } from '@/types/media';
-import { searchTmdb, getTrendingMedia } from '@/services/tmdb';
+import { searchTmdb } from '@/services/tmdb';
+import { useWatchlist } from '@/context/WatchlistContext';
 import {
   SearchIcon,
   CloseIcon,
   ToggleGoldBadgeIcon,
   PlayIcon,
+  PlusIcon,
+  CheckIcon,
+  ThumbsUpIcon,
+  InfoIcon,
 } from './Icons';
 
 interface SearchModalProps {
@@ -18,18 +23,6 @@ interface SearchModalProps {
   onSearchChange?: (q: string) => void;
 }
 
-const CATEGORY_CHIPS = [
-  'All',
-  'Trending',
-  'Action',
-  'Sci-Fi',
-  'Comedy',
-  'Thriller',
-  'Drama',
-  'Horror',
-  'Animation',
-];
-
 export const SearchModal: React.FC<SearchModalProps> = ({
   isOpen,
   onClose,
@@ -38,25 +31,26 @@ export const SearchModal: React.FC<SearchModalProps> = ({
 }) => {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
+  const { toggleWatchlist, isInWatchlist } = useWatchlist();
 
   const [query, setQuery] = useState(searchQuery);
-  const [activeCategory, setActiveCategory] = useState('All');
   const [results, setResults] = useState<MediaItem[]>([]);
-  const [trendingItems, setTrendingItems] = useState<MediaItem[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
 
-  // Load trending media once
-  useEffect(() => {
-    getTrendingMedia()
-      .then((items) => setTrendingItems(items))
-      .catch(console.error);
-  }, []);
+  const toggleLike = (id: string) => {
+    setLikedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   // Sync query and focus when modal opens
   useEffect(() => {
     if (isOpen) {
       setQuery(searchQuery);
-      setActiveCategory('All');
       const timer = setTimeout(() => {
         inputRef.current?.focus();
         inputRef.current?.select();
@@ -117,18 +111,6 @@ export const SearchModal: React.FC<SearchModalProps> = ({
     return () => clearTimeout(timeout);
   }, [query, isOpen]);
 
-  // Category chip clicked
-  const handleCategoryClick = (cat: string) => {
-    setActiveCategory(cat);
-    if (cat === 'All' || cat === 'Trending') {
-      setQuery('');
-      setResults([]);
-    } else {
-      setQuery(cat);
-    }
-    inputRef.current?.focus();
-  };
-
   const handleCardClick = (item: MediaItem) => {
     onClose();
     router.push(`/detail/${item.id}`);
@@ -136,9 +118,9 @@ export const SearchModal: React.FC<SearchModalProps> = ({
 
   if (!isOpen) return null;
 
-  // Decide what items to display
+  // Decide what items to display — search results only; no default trending feed.
   const isDisplayingResults = query.trim().length > 0;
-  const displayedCards = isDisplayingResults ? results : trendingItems;
+  const displayedCards = results;
 
   return (
     <div
@@ -162,7 +144,6 @@ export const SearchModal: React.FC<SearchModalProps> = ({
               value={query}
               onChange={(e) => {
                 setQuery(e.target.value);
-                setActiveCategory('All');
               }}
               placeholder="Search movies, TV shows, actors, genres..."
               className="cinematic-search-input"
@@ -199,48 +180,22 @@ export const SearchModal: React.FC<SearchModalProps> = ({
           </button>
         </div>
 
-        {/* Quick Category Filter Pills */}
-        <div className="cinematic-filter-pills">
-          {CATEGORY_CHIPS.map((cat) => {
-            const isActive = activeCategory === cat;
-            return (
-              <button
-                key={cat}
-                className={`cinematic-pill${isActive ? ' active' : ''}`}
-                onClick={() => handleCategoryClick(cat)}
-                type="button"
-              >
-                {cat}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Section Heading */}
-        <div className="cinematic-section-header">
-          <h2 className="cinematic-section-title">
-            {isDisplayingResults ? (
-              <>
-                Search Results for &ldquo;{query}&rdquo;
-                {!isSearching && (
-                  <span className="cinematic-count-badge">
-                    {results.length} {results.length === 1 ? 'title' : 'titles'}
-                  </span>
-                )}
-              </>
-            ) : (
-              <>
-                Trending on Toggle Box
-                <span className="cinematic-section-subtitle">
-                  Popular movies and series streaming now
+        {/* Section Heading — only shown for actual search results */}
+        {isDisplayingResults && (
+          <div className="cinematic-section-header">
+            <h2 className="cinematic-section-title">
+              Search Results for &ldquo;{query}&rdquo;
+              {!isSearching && (
+                <span className="cinematic-count-badge">
+                  {results.length} {results.length === 1 ? 'title' : 'titles'}
                 </span>
-              </>
-            )}
-          </h2>
-        </div>
+              )}
+            </h2>
+          </div>
+        )}
 
-        {/* Content Area */}
-        {isSearching && results.length === 0 ? (
+        {/* Content Area — only rendered once a query is entered */}
+        {!isDisplayingResults ? null : isSearching && results.length === 0 ? (
           /* Loading Skeletons Grid */
           <div className="cinematic-cards-grid">
             {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
@@ -288,30 +243,90 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                       <ToggleGoldBadgeIcon size={13} />
                     </div>
 
-                    {/* Hover Play Icon Overlay */}
-                    <div className="cinematic-card-play-overlay">
-                      <div className="cinematic-play-bubble">
-                        <PlayIcon size={20} />
-                      </div>
-                    </div>
-                  </div>
+                    {/* Card Caption Info — overlaid on poster, revealed on hover */}
+                    <div className="cinematic-card-info">
+                      <h3 className="cinematic-card-title">{item.title}</h3>
 
-                  {/* Card Caption Info */}
-                  <div className="cinematic-card-info">
-                    <h3 className="cinematic-card-title">{item.title}</h3>
-                    <div className="cinematic-card-meta">
-                      <span className="cinematic-match">{item.matchScore}% Match</span>
-                      <span>{item.year}</span>
-                      <span className="cinematic-rating">{item.rating}</span>
-                      <span className="cinematic-type">
-                        {item.type === 'tv' ? 'TV' : 'Movie'}
-                      </span>
-                    </div>
-                    {item.genre && item.genre.length > 0 && (
-                      <div className="cinematic-card-genres">
-                        {item.genre.slice(0, 2).join(' • ')}
+                      {/* Quick Action buttons — same row as the normal-page cards */}
+                      <div
+                        className="card-quick-actions cinematic-card-actions"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <button
+                          className="action-btn-circle play-btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCardClick(item);
+                          }}
+                          title="Play Now"
+                          aria-label="Play Now"
+                          type="button"
+                        >
+                          <PlayIcon size={14} />
+                        </button>
+
+                        <button
+                          className={`action-btn-circle ${
+                            isInWatchlist(item.id) ? 'active-watchlist' : ''
+                          }`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleWatchlist(item);
+                          }}
+                          title={isInWatchlist(item.id) ? 'Remove from Watchlist' : 'Add to Watchlist'}
+                          aria-label="Toggle Watchlist"
+                          aria-pressed={isInWatchlist(item.id)}
+                          type="button"
+                        >
+                          {isInWatchlist(item.id) ? <CheckIcon size={14} /> : <PlusIcon size={14} />}
+                        </button>
+
+                        <button
+                          className={`action-btn-circle ${
+                            likedIds.has(item.id) ? 'active-like' : ''
+                          }`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleLike(item.id);
+                          }}
+                          title="Like"
+                          aria-label="Like"
+                          aria-pressed={likedIds.has(item.id)}
+                          type="button"
+                        >
+                          <ThumbsUpIcon size={13} />
+                        </button>
+
+                        <button
+                          className="action-btn-circle info-btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCardClick(item);
+                          }}
+                          title="More Info"
+                          aria-label="More Info"
+                          type="button"
+                        >
+                          <InfoIcon size={13} />
+                        </button>
                       </div>
-                    )}
+
+                      <div className="cinematic-card-meta">
+                        {typeof item.matchScore === 'number' && (
+                          <span className="cinematic-match cinematic-meta-item">
+                            {item.matchScore}% Match
+                          </span>
+                        )}
+                        <span className="cinematic-meta-item">{item.year}</span>
+                        <span className="cinematic-meta-item cinematic-rating">{item.rating}</span>
+                        <span className="cinematic-meta-item">{item.duration}</span>
+                      </div>
+                      {item.genre && item.genre.length > 0 && (
+                        <div className="cinematic-card-genres">
+                          {item.genre.slice(0, 3).join(' • ')}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               );
@@ -327,19 +342,19 @@ export const SearchModal: React.FC<SearchModalProps> = ({
               No titles found for &ldquo;{query}&rdquo;
             </h3>
             <p className="cinematic-empty-text">
-              Try searching with a different spelling, actor name, or explore one of the popular categories above.
+              Try searching with a different spelling, or an actor or director name.
             </p>
             <div className="cinematic-empty-suggestions">
               <button
                 className="cinematic-pill active"
                 onClick={() => {
                   setQuery('');
-                  setActiveCategory('All');
+                  setResults([]);
                   inputRef.current?.focus();
                 }}
                 type="button"
               >
-                Clear Search & Browse Trending
+                Clear Search
               </button>
             </div>
           </div>

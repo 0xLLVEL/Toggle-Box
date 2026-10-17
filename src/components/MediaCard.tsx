@@ -110,8 +110,8 @@ export const MediaCard: React.FC<MediaCardProps> = ({
             <div className="card-quality-tag">{item.quality[0]}</div>
           )}
 
-          {/* Included-with-ToggleBox gold badge — stays visible on the card face */}
-          <div className="card-gold-badge" title="Included with Toggle Box">
+          {/* Included-with-Tea+ gold badge — stays visible on the card face */}
+          <div className="card-gold-badge" title="Included with Tea+">
             <ToggleGoldBadgeIcon size={12} aria-hidden="true" />
           </div>
 

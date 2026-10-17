@@ -148,7 +148,7 @@ export const Footer: React.FC<FooterProps> = ({ onSeeMore }) => {
 
           <div className="footer-meta-row">
             <p className="footer-copyright-text">
-              © 1996–2026, T-BOX, Inc. or its affiliates.
+              © 1996–2026, Tea+, Inc. or its affiliates.
             </p>
             <span className="footer-meta-divider" aria-hidden="true" />
             <a

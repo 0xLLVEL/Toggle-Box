@@ -254,12 +254,12 @@ export default function DetailPage({ params }: { params: Promise<{ id: string }>
             {/* White Free Trial Subscription Box */}
             <div className="detail-trial-box">
               <div className="trial-pill-card">
-                <span className="trial-pill-brand">TOGGLE</span>
+                <span className="trial-pill-brand">Tea+</span>
                 <span className="trial-pill-text">7-day free trial</span>
               </div>
               <div className="trial-join-line">
                 <ToggleGoldBadgeIcon size={14} />
-                <span className="trial-join-text">Join TOGGLE</span>
+                <span className="trial-join-text">Join Tea+</span>
                 <span className="trial-terms-text">Terms apply</span>
               </div>
             </div>

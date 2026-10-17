@@ -155,7 +155,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       <header className={`navbar-container${isScrolled ? ' scrolled' : ''}`}>
         <div className="navbar-left">
           {/* Brand Logo */}
-          <Link href="/" className="brand-btn" title="Toggle Box Home">
+          <Link href="/" className="brand-btn" title="Tea+ Home">
             <ToggleBoxLogo height={28} />
           </Link>
 
@@ -282,7 +282,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <SparklesIcon size={16} className="tier-icon-inline" />
                     <div className="tier-text">
                       <span className="tier-title">
-                        {isSubscribed ? 'TOGGLE+ Member' : 'Standard Pass'}
+                        {isSubscribed ? 'Tea+ Member' : 'Standard Pass'}
                       </span>
                       <span className="tier-desc">
                         {isSubscribed ? 'Ultra HD 4K • Dolby Atmos' : 'Free Preview Mode'}
@@ -349,7 +349,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             )}
           </div>
 
-          {/* Join Prime / Toggle Box CTA — v0.2 gradient */}
+          {/* Join Tea+ CTA — v0.2 gradient */}
           <button
             className={`join-prime-btn${isSubscribed ? ' subscribed' : ''}`}
             onClick={() => setIsSubscribed(!isSubscribed)}
@@ -360,7 +360,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <CheckIcon size={15} /> Member
               </>
             ) : (
-              'Join TOGGLE'
+              'Join Tea+'
             )}
           </button>
         </div>

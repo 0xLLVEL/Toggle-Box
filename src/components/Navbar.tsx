@@ -14,6 +14,7 @@ import {
   HelpIcon,
   LogoutIcon,
   SparklesIcon,
+  ChevronDownIcon,
 } from './Icons';
 import { SearchModal } from './SearchModal';
 import { LanguageSelector } from './LanguageSelector';
@@ -159,12 +160,68 @@ export const Navbar: React.FC<NavbarProps> = ({
             <ToggleBoxLogo height={28} />
           </Link>
 
-          {/* Navigation Links — underline indicator style */}
+          {/* Navigation Links — Prime Video style */}
           <nav className="nav-links" aria-label="Main Navigation">
-            {navLinks.map((link) => {
+            {navLinks.slice(0, 3).map((link) => {
               const isActive =
                 link.href === '/' ? pathname === '/' : pathname.startsWith(link.href);
 
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`nav-link${isActive ? ' nav-link-active' : ''}`}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
+
+            {/* Prime Video Styled "Categories" with Dropdown */}
+            <div className="nav-categories-wrapper" ref={genresRef}>
+              <button
+                type="button"
+                className={`nav-link nav-categories-trigger${showGenresMenu ? ' is-active nav-link-active' : ''}`}
+                onClick={() => {
+                  setShowGenresMenu((prev) => !prev);
+                  setShowProfileMenu(false);
+                }}
+                aria-haspopup="menu"
+                aria-expanded={showGenresMenu}
+              >
+                <span>Categories</span>
+                <ChevronDownIcon size={12} className={`nav-caret${showGenresMenu ? ' is-flipped' : ''}`} />
+              </button>
+
+              {showGenresMenu && (
+                <div className="dropdown-menu genre-menu nav-categories-menu animate-fadeIn">
+                  <div className="dropdown-menu-header">
+                    <div className="dropdown-header-title-group">
+                      <GridAppsIcon size={14} />
+                      <span>Explore Categories</span>
+                    </div>
+                  </div>
+
+                  <div className="genre-menu-grid">
+                    {genreDropdownItems.map((item) => (
+                      <Link
+                        key={item.id}
+                        href={item.href}
+                        className="genre-menu-tile"
+                        onClick={() => setShowGenresMenu(false)}
+                      >
+                        <span className="genre-menu-tile-title">{item.label}</span>
+                        <span className="genre-menu-tile-description">{item.description}</span>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* My Stuff (Watchlist) */}
+            {navLinks.slice(3).map((link) => {
+              const isActive = pathname.startsWith(link.href);
               return (
                 <Link
                   key={link.href}

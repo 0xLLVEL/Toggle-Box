@@ -7,7 +7,9 @@ import type {
   FullMediaDetail,
 } from '@/types/media';
 
-const TMDB_API_KEY = 'REDACTED_TMDB_API_KEY';
+// TMDB API key is injected at runtime via env var — never commit it.
+// Copy .env.example to .env.local and set TMDB_API_KEY.
+const TMDB_API_KEY = process.env.TMDB_API_KEY;
 const BASE_URL = 'https://api.themoviedb.org/3';
 const IMAGE_BASE_W780 = 'https://image.tmdb.org/t/p/w780';
 const IMAGE_BASE_W500 = 'https://image.tmdb.org/t/p/w500';
@@ -124,6 +126,11 @@ function formatTmdbItem(
 
 // Fetch helper with error tolerance
 async function fetchTmdb(endpoint: string, params: Record<string, string> = {}) {
+  if (!TMDB_API_KEY) {
+    throw new Error(
+      'TMDB_API_KEY is not set. Create a .env.local file (copy .env.example) and add your TMDB API key.',
+    );
+  }
   const url = new URL(`${BASE_URL}${endpoint}`);
   url.searchParams.set('api_key', TMDB_API_KEY);
   url.searchParams.set('language', 'en-US');

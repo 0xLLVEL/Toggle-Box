@@ -150,10 +150,6 @@ export const Navbar: React.FC<NavbarProps> = ({
     { href: '/movies', label: 'Movies' },
     { href: '/tv', label: 'TV Shows' },
     {
-      href: '/mystuff',
-      label: `My Stuff${watchlistCount > 0 ? ` (${watchlistCount})` : ''}`,
-    },
-    {
       href: '/providers',
       label: 'Extensions',
       badge: activeProvidersCount > 0 ? activeProvidersCount : undefined,

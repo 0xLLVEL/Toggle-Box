@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import type {
   ZangetsuSource,
   ZangetsuManifest,
@@ -12,6 +12,14 @@ import type {
 
 const STORAGE_KEY_INSTALLED = 'tea_plus_installed_providers';
 const STORAGE_KEY_CUSTOM_REPOS = 'tea_plus_custom_repos';
+
+/** Client-side stream result cache — avoids re-hitting the API for the same title+episode */
+const STREAM_RESULT_CACHE = new Map<string, { result: any; ts: number }>();
+const STREAM_CACHE_TTL = 1000 * 60 * 10; // 10 minutes
+
+function streamCacheKey(providerId: string, title: string, episode: number) {
+  return `${providerId}::${title.toLowerCase().trim()}::${episode}`;
+}
 
 // Default installed providers for out-of-the-box streaming
 const DEFAULT_PREINSTALLED: Array<Partial<InstalledProvider> & { id: string }> = [
@@ -46,6 +54,13 @@ interface ProviderContextValue {
     type: 'movie' | 'tv',
     episodeNumber?: number
   ) => Promise<{ sources: ProviderVideoSource[]; episodes: ProviderEpisode[]; bestMatchTitle?: string }>;
+  /** Race all enabled providers in parallel — resolves with the first winner */
+  resolveAllProviders: (
+    title: string,
+    type: 'movie' | 'tv',
+    episodeNumber?: number,
+    onProgress?: (providerId: string, index: number, total: number) => void
+  ) => Promise<{ sources: ProviderVideoSource[]; episodes: ProviderEpisode[]; providerId: string; bestMatchTitle?: string } | null>;
   executeProvider: (providerId: string, method: string, args?: any[]) => Promise<any>;
 }
 
@@ -319,6 +334,13 @@ export const ProviderProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       type: 'movie' | 'tv',
       episodeNumber: number = 1
     ): Promise<{ sources: ProviderVideoSource[]; episodes: ProviderEpisode[]; bestMatchTitle?: string }> => {
+      // Check client-side cache first
+      const cacheKey = streamCacheKey(providerId, title, episodeNumber);
+      const cached = STREAM_RESULT_CACHE.get(cacheKey);
+      if (cached && Date.now() - cached.ts < STREAM_CACHE_TTL) {
+        return cached.result;
+      }
+
       try {
         const results = await executeProvider(providerId, 'search', [title, 1]);
         if (!Array.isArray(results) || results.length === 0) {
@@ -329,28 +351,84 @@ export const ProviderProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         let eps: ProviderEpisode[] = [];
         let sources: ProviderVideoSource[] = [];
 
-        // Check if TV show or has episodes
         try {
           eps = await getEpisodes(providerId, match.url);
         } catch (e) {
-          // Some movie providers don't have separate getEpisodes
+          // movie providers may not have getEpisodes
         }
 
         if (eps && eps.length > 0) {
           const targetEp = eps.find((e) => e.number === episodeNumber) || eps[0];
           sources = await getVideoSources(providerId, targetEp.url);
         } else {
-          // Direct movie video sources
           sources = await getVideoSources(providerId, match.url);
         }
 
-        return { sources, episodes: eps, bestMatchTitle: match.title };
+        const result = { sources, episodes: eps, bestMatchTitle: match.title };
+        // Store in cache only when we have sources
+        if (sources.length > 0) {
+          STREAM_RESULT_CACHE.set(cacheKey, { result, ts: Date.now() });
+        }
+        return result;
       } catch (err) {
         console.error(`Failed to resolve stream on ${providerId}:`, err);
         return { sources: [], episodes: [] };
       }
     },
     [executeProvider, getEpisodes, getVideoSources]
+  );
+
+  /**
+   * Race all enabled providers in parallel — calls onProgress for each attempt
+   * and resolves as soon as the first provider returns sources.
+   */
+  const resolveAllProviders = useCallback(
+    async (
+      title: string,
+      type: 'movie' | 'tv',
+      episodeNumber: number = 1,
+      onProgress?: (providerId: string, index: number, total: number) => void
+    ): Promise<{ sources: ProviderVideoSource[]; episodes: ProviderEpisode[]; providerId: string; bestMatchTitle?: string } | null> => {
+      const active = installedProviders.filter((p) => p.isEnabled);
+      if (active.length === 0) return null;
+
+      const total = active.length;
+
+      // Build a promise per provider that resolves with { result, providerId } or null
+      const providerRaces = active.map((provider, index) =>
+        resolveProviderStream(provider.id, title, type, episodeNumber)
+          .then((result) => {
+            onProgress?.(provider.id, index, total);
+            if (result.sources && result.sources.length > 0) {
+              return { ...result, providerId: provider.id };
+            }
+            return null;
+          })
+          .catch(() => {
+            onProgress?.(provider.id, index, total);
+            return null;
+          })
+      );
+
+      // Use Promise.any to get the first non-null resolution
+      // Fallback: sequential if Promise.any not available
+      try {
+        // Filter out nulls: race until first success
+        const result = await (Promise as any).any(
+          providerRaces.map((p) =>
+            p.then((r: any) => {
+              if (!r) throw new Error('no result');
+              return r;
+            })
+          )
+        );
+        return result;
+      } catch {
+        // All providers failed
+        return null;
+      }
+    },
+    [installedProviders, resolveProviderStream]
   );
 
   return (
@@ -371,6 +449,7 @@ export const ProviderProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         getEpisodes,
         getVideoSources,
         resolveProviderStream,
+        resolveAllProviders,
         executeProvider,
       }}
     >

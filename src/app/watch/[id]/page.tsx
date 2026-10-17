@@ -44,6 +44,7 @@ export default function WatchPlayerPage({ params }: { params: Promise<{ id: stri
   const {
     installedProviders,
     resolveProviderStream,
+    resolveAllProviders,
   } = useProviders();
 
   // Active enabled extensions from the extensions page
@@ -65,6 +66,13 @@ export default function WatchPlayerPage({ params }: { params: Promise<{ id: stri
 
   const [selectedProviderId, setSelectedProviderId] = useState<string>('');
   const [isResolvingStream, setIsResolvingStream] = useState(true);
+  // Auto-scan state: true = initial scan across all providers
+  const [isAutoScanning, setIsAutoScanning] = useState(true);
+  const [scanStep, setScanStep] = useState<string>('Finding best source...');
+  const [scanProgress, setScanProgress] = useState(0); // 0-100
+  /** IDs of providers that have already finished (success or fail) during auto-scan */
+  const [finishedProviderIds, setFinishedProviderIds] = useState<Set<string>>(new Set());
+  const [winnerProviderId, setWinnerProviderId] = useState<string>('');
   const [sources, setSources] = useState<ProviderVideoSource[]>([]);
   const [selectedSource, setSelectedSource] = useState<ProviderVideoSource | null>(null);
   const [providerEpisodes, setProviderEpisodes] = useState<ProviderEpisode[]>([]);
@@ -87,6 +95,8 @@ export default function WatchPlayerPage({ params }: { params: Promise<{ id: stri
   const hlsRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const hideControlsTimeout = useRef<any>(null);
+  // Guard so auto-scan only runs once per media+episode
+  const autoScanDoneRef = useRef(false);
 
   // 1. Fetch Media Details
   useEffect(() => {
@@ -113,24 +123,7 @@ export default function WatchPlayerPage({ params }: { params: Promise<{ id: stri
     };
   }, [mediaId, seasonParam, episodeParam]);
 
-  // 2. Select default extension
-  useEffect(() => {
-    if (enabledExtensions.length === 0) return;
-
-    if (!selectedProviderId || !enabledExtensions.some((p) => p.id === selectedProviderId)) {
-      const animeMatch = enabledExtensions.find((p) => p.type === 'anime');
-      const movieMatch = enabledExtensions.find((p) => p.type === 'movie' || p.type === 'all');
-
-      const defaultExt =
-        enabledExtensions.find((p) => p.isDefault) ||
-        (detail?.type === 'tv' && animeMatch ? animeMatch : movieMatch) ||
-        enabledExtensions[0];
-
-      setSelectedProviderId(defaultExt.id);
-    }
-  }, [enabledExtensions, selectedProviderId, detail]);
-
-  // 3. Load HLS.js
+  // Load HLS.js dynamically
   useEffect(() => {
     if (typeof window !== 'undefined' && !window.Hls) {
       const script = document.createElement('script');
@@ -140,33 +133,98 @@ export default function WatchPlayerPage({ params }: { params: Promise<{ id: stri
     }
   }, []);
 
-  // 4. Resolve Stream from chosen extension
+  // 2. Parallel auto-scan — all providers race simultaneously
   useEffect(() => {
-    if (!detail || !selectedProviderId) return;
+    if (!detail || enabledExtensions.length === 0) return;
+    if (autoScanDoneRef.current) return;
+    autoScanDoneRef.current = true;
+
+    let isMounted = true;
+    setIsAutoScanning(true);
+    setIsResolvingStream(true);
+    setScanProgress(5);
+    setFinishedProviderIds(new Set());
+    setWinnerProviderId('');
+    setScanStep(`Checking ${enabledExtensions.length} sources in parallel...`);
+
+    const total = enabledExtensions.length;
+    let finishedCount = 0;
+
+    resolveAllProviders(
+      detail.title,
+      detail.type,
+      selectedEpisode,
+      (providerId, _idx, _total) => {
+        if (!isMounted) return;
+        finishedCount++;
+        const pct = Math.min(90, Math.round((finishedCount / total) * 90));
+        setScanProgress(pct);
+        setFinishedProviderIds((prev) => new Set([...prev, providerId]));
+      }
+    )
+      .then((winner) => {
+        if (!isMounted) return;
+        if (winner && winner.sources.length > 0) {
+          setScanProgress(100);
+          const prov = enabledExtensions.find((e) => e.id === winner.providerId);
+          setScanStep(`Found on ${prov?.name || winner.providerId}!`);
+          setWinnerProviderId(winner.providerId);
+
+          if (winner.episodes && winner.episodes.length > 0) {
+            setProviderEpisodes(winner.episodes);
+          }
+          setSources(winner.sources);
+          setSelectedSource(winner.sources[0]);
+          setSelectedProviderId(winner.providerId);
+          setStatusMessage('');
+
+          // Brief flash so the user sees success
+          setTimeout(() => {
+            if (isMounted) {
+              setIsAutoScanning(false);
+              setIsResolvingStream(false);
+            }
+          }, 500);
+        } else {
+          setScanProgress(100);
+          setScanStep('No working source found.');
+          setSelectedProviderId(enabledExtensions[0]?.id || '');
+          setSources([]);
+          setSelectedSource(null);
+          setStatusMessage(
+            `No working stream found for "${detail.title}". Install more extensions or check your connection.`
+          );
+          setIsAutoScanning(false);
+          setIsResolvingStream(false);
+        }
+      })
+      .catch(() => {
+        if (!isMounted) return;
+        setScanProgress(100);
+        setScanStep('Scan failed.');
+        setIsAutoScanning(false);
+        setIsResolvingStream(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [detail, enabledExtensions, selectedEpisode, resolveAllProviders]);
+
+  // When user manually switches extension, re-resolve (not auto-scan)
+  useEffect(() => {
+    if (!selectedProviderId || !detail || isAutoScanning) return;
 
     let isMounted = true;
     setIsResolvingStream(true);
-
     const providerObj = enabledExtensions.find((p) => p.id === selectedProviderId);
     const providerName = providerObj?.name || selectedProviderId;
+    setStatusMessage(`Switching to ${providerName}...`);
 
-    setStatusMessage(`Searching stream on ${providerName}...`);
-
-    async function fetchStream() {
-      try {
-        const result = await resolveProviderStream(
-          selectedProviderId,
-          detail!.title,
-          detail!.type,
-          selectedEpisode
-        );
-
+    resolveProviderStream(selectedProviderId, detail.title, detail.type, selectedEpisode)
+      .then((result) => {
         if (!isMounted) return;
-
-        if (result.episodes && result.episodes.length > 0) {
-          setProviderEpisodes(result.episodes);
-        }
-
+        if (result.episodes && result.episodes.length > 0) setProviderEpisodes(result.episodes);
         if (result.sources && result.sources.length > 0) {
           setSources(result.sources);
           setSelectedSource(result.sources[0]);
@@ -174,30 +232,23 @@ export default function WatchPlayerPage({ params }: { params: Promise<{ id: stri
         } else {
           setSources([]);
           setSelectedSource(null);
-          setStatusMessage(
-            `No stream available on ${providerName} for "${detail!.title}". Please switch to another installed extension.`
-          );
+          setStatusMessage(`No stream on ${providerName}. Try another extension.`);
         }
-      } catch (err: any) {
+      })
+      .catch(() => {
         if (isMounted) {
-          console.error(`Failed to resolve stream from ${selectedProviderId}:`, err);
           setSources([]);
           setSelectedSource(null);
-          setStatusMessage(
-            `Error extracting stream from ${providerName}. Please switch to another extension.`
-          );
+          setStatusMessage(`Error loading from ${providerName}.`);
         }
-      } finally {
+      })
+      .finally(() => {
         if (isMounted) setIsResolvingStream(false);
-      }
-    }
+      });
 
-    fetchStream();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [detail, selectedProviderId, selectedEpisode, resolveProviderStream, enabledExtensions]);
+    return () => { isMounted = false; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedProviderId]);
 
   // 5. Attach video stream via HLS
   useEffect(() => {
@@ -399,14 +450,126 @@ export default function WatchPlayerPage({ params }: { params: Promise<{ id: stri
         stillUrl: detail?.backdropUrl || '',
       }));
 
+  // Also reset auto-scan guard when episode changes so re-scanning works
+  useEffect(() => {
+    autoScanDoneRef.current = false;
+    setIsAutoScanning(true);
+    setScanProgress(0);
+    setScanStep('Finding best source...');
+  }, [selectedEpisode]);
+
   if (isLoadingDetail || !detail) {
     return (
-      <div className="watch-page-container loading-state">
-        <div className="watch-spinner" />
-        <p className="watch-loading-text">Opening Prime Video Player...</p>
+      <div className="pv-loading-screen">
+        <div className="pv-loader-ring" />
       </div>
     );
   }
+
+  // Prime Video style loading screen while auto-scanning sources
+  if (isAutoScanning) {
+    const isDone = scanProgress === 100;
+    return (
+      <div
+        className="pv-loading-screen"
+        style={
+          detail.backdropUrl
+            ? { '--pv-bg': `url(${detail.backdropUrl})` } as React.CSSProperties
+            : {}
+        }
+      >
+        {/* Blurred backdrop */}
+        <div className="pv-ls-backdrop" />
+        {/* Scrim gradients */}
+        <div className="pv-ls-scrim" />
+
+        {/* Top-left back button */}
+        <button
+          className="pv-ls-back"
+          onClick={() => router.back()}
+          type="button"
+          aria-label="Go back"
+        >
+          <ChevronLeftIcon size={18} />
+        </button>
+
+        {/* Centre content card */}
+        <div className="pv-ls-card">
+          {/* Poster */}
+          {detail.posterUrl && (
+            <img src={detail.posterUrl} alt={detail.title} className="pv-ls-poster" />
+          )}
+
+          <div className="pv-ls-meta">
+            {/* Brand */}
+            <span className="pv-ls-brand">
+              <ToggleGoldBadgeIcon size={11} />
+              Included with Tea+
+            </span>
+
+            {/* Title */}
+            <h1 className="pv-ls-title">{detail.title}</h1>
+
+            {/* Episode label for TV */}
+            {detail.type === 'tv' && selectedEpisode > 0 && (
+              <p className="pv-ls-ep">
+                Season {selectedSeason} &nbsp;·&nbsp; Episode {selectedEpisode}
+                {currentEpDetail ? ` — ${currentEpDetail.title}` : ''}
+              </p>
+            )}
+
+            {/* Genre / year metadata strip */}
+            <div className="pv-ls-tags">
+              {detail.year && <span className="pv-ls-tag">{detail.year}</span>}
+              {detail.voteAverage ? (
+                <span className="pv-ls-tag">{detail.voteAverage.toFixed(1)} ★</span>
+              ) : null}
+              {detail.rating && <span className="pv-ls-tag">{detail.rating}</span>}
+              <span className="pv-ls-tag">{detail.type === 'tv' ? 'Series' : 'Movie'}</span>
+            </div>
+
+            {/* Progress bar */}
+            <div className="pv-ls-bar-track">
+              <div
+                className="pv-ls-bar-fill"
+                style={{ width: `${scanProgress}%` }}
+              />
+            </div>
+
+            {/* Status row */}
+            <div className="pv-ls-status-row">
+              {!isDone ? (
+                <>
+                  <div className="pv-ls-spinner" />
+                  <span className="pv-ls-status-text">{scanStep}</span>
+                </>
+              ) : (
+                <span className={`pv-ls-status-text ${scanProgress === 100 && sources.length === 0 ? 'pv-ls-failed' : 'pv-ls-ok'}`}>
+                  {scanStep}
+                </span>
+              )}
+            </div>
+
+            {/* Extension pips */}
+            <div className="pv-ls-pips">
+              {enabledExtensions.map((ext) => {
+                const done = finishedProviderIds.has(ext.id);
+                const winner = winnerProviderId === ext.id;
+                return (
+                  <div
+                    key={ext.id}
+                    className={`pv-ls-pip ${winner ? 'winner' : done ? 'done' : 'pending'}`}
+                    title={ext.name}
+                  />
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
 
   return (
     <div

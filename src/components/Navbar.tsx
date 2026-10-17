@@ -145,15 +145,10 @@ export const Navbar: React.FC<NavbarProps> = ({
   const { installedProviders } = useProviders();
   const activeProvidersCount = installedProviders.filter((p) => p.isEnabled).length;
 
-  const navLinks = [
+  const navLinks: { href: string; label: string; badge?: number }[] = [
     { href: '/', label: 'Home' },
     { href: '/movies', label: 'Movies' },
     { href: '/tv', label: 'TV Shows' },
-    {
-      href: '/providers',
-      label: 'Extensions',
-      badge: activeProvidersCount > 0 ? activeProvidersCount : undefined,
-    },
   ];
 
   return (
@@ -321,6 +316,18 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <span className="item-label">My Watchlist</span>
                     {watchlistCount > 0 && (
                       <span className="item-counter-badge">{watchlistCount}</span>
+                    )}
+                  </Link>
+
+                  <Link
+                    href="/providers"
+                    className="dropdown-item profile-nav-item"
+                    onClick={() => setShowProfileMenu(false)}
+                  >
+                    <PuzzleIcon size={17} className="profile-nav-icon" />
+                    <span className="item-label">Extensions</span>
+                    {activeProvidersCount > 0 && (
+                      <span className="item-counter-badge">{activeProvidersCount}</span>
                     )}
                   </Link>
 

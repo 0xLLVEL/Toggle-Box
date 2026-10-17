@@ -23,7 +23,6 @@ import {
   CloseIcon,
   VolumeHighIcon,
   VolumeMuteIcon,
-  BoltIcon,
 } from '@/components/Icons';
 
 export default function DetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -48,8 +47,6 @@ export default function DetailPage({ params }: { params: Promise<{ id: string }>
   const [isPlayingTrailer, setIsPlayingTrailer] = useState(false);
   const [isTrailerMuted, setIsTrailerMuted] = useState(true);
   const [showFullSynopsis, setShowFullSynopsis] = useState(false);
-  const [isStreamOpen, setIsStreamOpen] = useState(false);
-  const [streamEpisode, setStreamEpisode] = useState(1);
 
   useEffect(() => {
     let isMounted = true;

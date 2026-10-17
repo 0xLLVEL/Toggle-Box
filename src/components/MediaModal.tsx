@@ -147,7 +147,6 @@ export const MediaModal: React.FC<MediaModalProps> = ({
                   <span>{isPlaying ? 'Pause' : 'Trailer'}</span>
                 </button>
               )}
-
               <button
                 className={`modal-btn-icon ${isInWatchlist ? 'active-btn' : ''}`}
                 onClick={() => onToggleWatchlist(item)}

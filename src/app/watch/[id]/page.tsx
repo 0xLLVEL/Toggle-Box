@@ -242,6 +242,23 @@ export default function WatchPlayerPage({ params }: { params: Promise<{ id: stri
     };
   }, [selectedSource]);
 
+  // Subtitle track selection synchronization
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !video.textTracks) return;
+
+    for (let i = 0; i < video.textTracks.length; i++) {
+      const track = video.textTracks[i];
+      if (selectedSubLang === 'off') {
+        track.mode = 'disabled';
+      } else if (track.language === selectedSubLang) {
+        track.mode = 'showing';
+      } else {
+        track.mode = 'disabled';
+      }
+    }
+  }, [selectedSubLang]);
+
   // 6. Ambient Controls Auto-Hiding
   const triggerActivity = () => {
     setShowControls(true);
@@ -369,16 +386,15 @@ export default function WatchPlayerPage({ params }: { params: Promise<{ id: stri
   };
 
   const currentProvider = enabledExtensions.find((p) => p.id === selectedProviderId);
-  const currentEpDetail = detail?.episodes?.find((e) => e.episodeNumber === selectedEpisode);
+  const currentEpDetail = detail?.episodes?.find((e) => e.num === selectedEpisode);
 
   // Available episodes list (either from TMDB detail or from scraper)
-  const episodesList = detail?.episodes && detail.episodes.length > 0
+  const episodesList: EpisodeItem[] = detail?.episodes && detail.episodes.length > 0
     ? detail.episodes
     : providerEpisodes.map((pe) => ({
-        id: pe.id,
-        episodeNumber: pe.number,
+        num: pe.number,
         title: pe.title,
-        synopsis: '',
+        desc: '',
         duration: '',
         stillUrl: detail?.backdropUrl || '',
       }));
@@ -589,33 +605,38 @@ export default function WatchPlayerPage({ params }: { params: Promise<{ id: stri
               </button>
 
               {showSubtitlesMenu && (
-                <div className="watch-menu-popover">
-                  <div className="watch-menu-header">SUBTITLES</div>
-                  <button
-                    className={`watch-menu-item ${selectedSubLang === 'off' ? 'active' : ''}`}
-                    onClick={() => {
-                      setSelectedSubLang('off');
-                      setShowSubtitlesMenu(false);
-                    }}
-                    type="button"
-                  >
-                    <span>Off</span>
-                    {selectedSubLang === 'off' && <CheckIcon size={14} />}
-                  </button>
-                  {selectedSource.subtitles.map((sub, idx) => (
+                <div className="watch-menu-popover watch-subtitles-popover">
+                  <div className="watch-menu-header">
+                    SUBTITLES ({selectedSource.subtitles.length})
+                  </div>
+                  <div className="watch-subtitles-scroll-list">
                     <button
-                      key={idx}
-                      className={`watch-menu-item ${selectedSubLang === sub.lang ? 'active' : ''}`}
+                      className={`watch-menu-item ${selectedSubLang === 'off' ? 'active' : ''}`}
                       onClick={() => {
-                        setSelectedSubLang(sub.lang);
+                        setSelectedSubLang('off');
                         setShowSubtitlesMenu(false);
                       }}
                       type="button"
                     >
-                      <span>{sub.label || sub.lang.toUpperCase()}</span>
-                      {selectedSubLang === sub.lang && <CheckIcon size={14} />}
+                      <span className="sub-label-text">Off</span>
+                      {selectedSubLang === 'off' && <CheckIcon size={14} className="accent-check" />}
                     </button>
-                  ))}
+                    {selectedSource.subtitles.map((sub, idx) => (
+                      <button
+                        key={`${sub.lang}-${idx}`}
+                        className={`watch-menu-item ${selectedSubLang === sub.lang ? 'active' : ''}`}
+                        onClick={() => {
+                          setSelectedSubLang(sub.lang);
+                          setShowSubtitlesMenu(false);
+                        }}
+                        type="button"
+                        title={sub.label || sub.lang.toUpperCase()}
+                      >
+                        <span className="sub-label-text">{sub.label || sub.lang.toUpperCase()}</span>
+                        {selectedSubLang === sub.lang && <CheckIcon size={14} className="accent-check" />}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
@@ -759,13 +780,13 @@ export default function WatchPlayerPage({ params }: { params: Promise<{ id: stri
 
           <div className="drawer-episodes-list">
             {episodesList.map((ep) => {
-              const isActive = ep.episodeNumber === selectedEpisode;
+              const isActive = ep.num === selectedEpisode;
               return (
                 <div
-                  key={ep.id || ep.episodeNumber}
+                  key={ep.num}
                   className={`drawer-ep-card ${isActive ? 'active' : ''}`}
                   onClick={() => {
-                    setSelectedEpisode(ep.episodeNumber);
+                    setSelectedEpisode(ep.num);
                     setShowEpisodesDrawer(false);
                   }}
                 >
@@ -781,10 +802,10 @@ export default function WatchPlayerPage({ params }: { params: Promise<{ id: stri
                   </div>
                   <div className="drawer-ep-info">
                     <div className="drawer-ep-title-row">
-                      <span className="drawer-ep-num">Ep {ep.episodeNumber}</span>
+                      <span className="drawer-ep-num">Ep {ep.num}</span>
                       <h4 className="drawer-ep-title">{ep.title}</h4>
                     </div>
-                    {ep.synopsis && <p className="drawer-ep-desc">{ep.synopsis}</p>}
+                    {ep.desc && <p className="drawer-ep-desc">{ep.desc}</p>}
                     {ep.duration && <span className="drawer-ep-dur">{ep.duration}</span>}
                   </div>
                 </div>

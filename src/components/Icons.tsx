@@ -388,6 +388,3 @@ export const SubtitlesIcon: React.FC<{ size?: number; className?: string }> = ({
   </svg>
 );
 
-
-
-

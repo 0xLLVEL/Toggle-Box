@@ -7870,6 +7870,56 @@ a {
   background: rgba(0, 168, 225, 0.1);
 }
 
+/* Compact & Scrollable Subtitles Popover */
+.watch-subtitles-popover {
+  width: 220px !important;
+  padding: 0.45rem !important;
+}
+
+.watch-subtitles-scroll-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  max-height: 230px;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+  padding-right: 4px;
+  scrollbar-width: thin !important;
+  scrollbar-color: rgba(255, 255, 255, 0.25) rgba(255, 255, 255, 0.04) !important;
+}
+
+.watch-subtitles-scroll-list::-webkit-scrollbar {
+  display: block !important;
+  width: 5px !important;
+}
+
+.watch-subtitles-scroll-list::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 4px;
+}
+
+.watch-subtitles-scroll-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 4px;
+}
+
+.watch-subtitles-scroll-list::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}
+
+.watch-subtitles-popover .watch-menu-item {
+  padding: 0.42rem 0.65rem !important;
+  font-size: 0.82rem !important;
+}
+
+.sub-label-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 155px;
+}
+
+
 /* Bottom Playback Controls Overlay */
 .watch-bottom-overlay {
   position: absolute;
@@ -8195,6 +8245,7 @@ a {
   color: rgba(255, 255, 255, 0.55);
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   margin: 0;
@@ -8210,10 +8261,6 @@ a {
   from { transform: translateX(100%); }
   to { transform: translateX(0); }
 }
-
-
-
-
 
 
 

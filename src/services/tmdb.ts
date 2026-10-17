@@ -11,7 +11,7 @@ import type {
 const TMDB_API_KEY =
   process.env.NEXT_PUBLIC_TMDB_API_KEY ||
   process.env.TMDB_API_KEY ||
-  'REDACTED_TMDB_API_KEY';
+  'aa2cc9486c0a47e331576c9a49f07050';
 const BASE_URL = 'https://api.themoviedb.org/3';
 const IMAGE_BASE_W780 = 'https://image.tmdb.org/t/p/w780';
 const IMAGE_BASE_W500 = 'https://image.tmdb.org/t/p/w500';

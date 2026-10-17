@@ -182,6 +182,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                   className={`nav-link${isActive ? ' nav-link-active' : ''}`}
                 >
                   {link.label}
+                  {link.badge !== undefined && (
+                    <span className="navbar-extensions-badge">{link.badge}</span>
+                  )}
                 </Link>
               );
             })}

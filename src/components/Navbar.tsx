@@ -14,7 +14,6 @@ import {
   HelpIcon,
   LogoutIcon,
   SparklesIcon,
-  ChevronDownIcon,
 } from './Icons';
 import { SearchModal } from './SearchModal';
 import { LanguageSelector } from './LanguageSelector';
@@ -23,55 +22,55 @@ const genreDropdownItems = [
   {
     id: 'action',
     label: 'Action',
-    href: '/movies?genre=Action',
+    href: '/genres/action',
     description: 'Blockbusters, chases, and big-screen adrenaline.',
   },
   {
     id: 'comedy',
     label: 'Comedy',
-    href: '/movies?genre=Comedy',
+    href: '/genres/comedy',
     description: 'Light watches and easy picks for any night.',
   },
   {
     id: 'crime',
     label: 'Crime',
-    href: '/tv?genre=Crime',
+    href: '/genres/crime',
     description: 'Detectives, tension, and sharp mystery series.',
   },
   {
     id: 'drama',
     label: 'Drama',
-    href: '/tv?genre=Drama',
+    href: '/genres/drama',
     description: 'Character-led stories with high-stakes arcs.',
   },
   {
     id: 'scifi',
     label: 'Sci-Fi',
-    href: '/movies?genre=Sci-Fi',
+    href: '/genres/scifi',
     description: 'Future worlds, fantasy edges, and epic scale.',
   },
   {
     id: 'romance',
     label: 'Romance',
-    href: '/movies?genre=Romance',
+    href: '/genres/romance',
     description: 'Chemistry, longing, and modern love stories.',
   },
   {
     id: 'horror',
     label: 'Horror',
-    href: '/movies?genre=Horror',
+    href: '/genres/horror',
     description: 'Dark, tense, and built for late-night viewing.',
   },
   {
     id: 'family',
     label: 'Family',
-    href: '/movies?genre=Family',
+    href: '/genres/family',
     description: 'Family-friendly picks and comfort watches.',
   },
   {
     id: 'docs',
     label: 'Docs',
-    href: '/movies?genre=Documentary',
+    href: '/genres/docs',
     description: 'True stories, real people, and standout docs.',
   },
 ] as const;
@@ -176,48 +175,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </Link>
               );
             })}
-
-            {/* Prime Video Styled "Categories" with Dropdown */}
-            <div className="nav-categories-wrapper" ref={genresRef}>
-              <button
-                type="button"
-                className={`nav-link nav-categories-trigger${showGenresMenu ? ' is-active nav-link-active' : ''}`}
-                onClick={() => {
-                  setShowGenresMenu((prev) => !prev);
-                  setShowProfileMenu(false);
-                }}
-                aria-haspopup="menu"
-                aria-expanded={showGenresMenu}
-              >
-                <span>Categories</span>
-                <ChevronDownIcon size={12} className={`nav-caret${showGenresMenu ? ' is-flipped' : ''}`} />
-              </button>
-
-              {showGenresMenu && (
-                <div className="dropdown-menu genre-menu nav-categories-menu animate-fadeIn">
-                  <div className="dropdown-menu-header">
-                    <div className="dropdown-header-title-group">
-                      <GridAppsIcon size={14} />
-                      <span>Explore Categories</span>
-                    </div>
-                  </div>
-
-                  <div className="genre-menu-grid">
-                    {genreDropdownItems.map((item) => (
-                      <Link
-                        key={item.id}
-                        href={item.href}
-                        className="genre-menu-tile"
-                        onClick={() => setShowGenresMenu(false)}
-                      >
-                        <span className="genre-menu-tile-title">{item.label}</span>
-                        <span className="genre-menu-tile-description">{item.description}</span>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
 
             {/* My Stuff (Watchlist) */}
             {navLinks.slice(3).map((link) => {

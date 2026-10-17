@@ -7,9 +7,11 @@ import type {
   FullMediaDetail,
 } from '@/types/media';
 
-// TMDB API key is injected at runtime via env var — never commit it.
-// Copy .env.example to .env.local and set TMDB_API_KEY.
-const TMDB_API_KEY = process.env.TMDB_API_KEY;
+// TMDB API key is injected via NEXT_PUBLIC_TMDB_API_KEY or TMDB_API_KEY.
+const TMDB_API_KEY =
+  process.env.NEXT_PUBLIC_TMDB_API_KEY ||
+  process.env.TMDB_API_KEY ||
+  'aa2cc9486c0a47e331576c9a49f07050';
 const BASE_URL = 'https://api.themoviedb.org/3';
 const IMAGE_BASE_W780 = 'https://image.tmdb.org/t/p/w780';
 const IMAGE_BASE_W500 = 'https://image.tmdb.org/t/p/w500';
@@ -126,13 +128,19 @@ function formatTmdbItem(
 
 // Fetch helper with error tolerance
 async function fetchTmdb(endpoint: string, params: Record<string, string> = {}) {
-  if (!TMDB_API_KEY) {
+  const activeKey =
+    TMDB_API_KEY ||
+    (typeof process !== 'undefined'
+      ? process.env.NEXT_PUBLIC_TMDB_API_KEY || process.env.TMDB_API_KEY
+      : undefined);
+
+  if (!activeKey) {
     throw new Error(
       'TMDB_API_KEY is not set. Create a .env.local file (copy .env.example) and add your TMDB API key.',
     );
   }
   const url = new URL(`${BASE_URL}${endpoint}`);
-  url.searchParams.set('api_key', TMDB_API_KEY);
+  url.searchParams.set('api_key', activeKey);
   url.searchParams.set('language', 'en-US');
   Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
 
@@ -855,6 +863,58 @@ const DUPAHIYA_RECOMMENDATIONS: MediaItem[] = [
   },
 ];
 
+export function getFallbackStreamingRows(region: string = 'Pakistan'): CategoryRow[] {
+  return [
+    {
+      id: 'top-10',
+      title: `Top 10 in ${region}`,
+      isTop10: true,
+      region,
+      cardLayout: 'landscape',
+      items: DUPAHIYA_RECOMMENDATIONS.map((item, idx) => ({
+        ...item,
+        rank: idx + 1,
+        badge: (idx === 0 ? 'TOP 10' : idx < 3 ? 'NEW SEASON' : undefined) as BadgeType | undefined,
+      })),
+    },
+    {
+      id: 'featured-originals',
+      title: 'Featured Originals and Exclusives',
+      seeMoreLink: '/movies',
+      cardLayout: 'portrait',
+      items: DUPAHIYA_RECOMMENDATIONS,
+    },
+    {
+      id: 'top-tv',
+      title: 'Top TV',
+      seeMoreLink: '/tv',
+      cardLayout: 'landscape',
+      items: DUPAHIYA_RECOMMENDATIONS.filter((i) => i.type === 'tv').concat(DUPAHIYA_RECOMMENDATIONS),
+    },
+    {
+      id: 'top-movies',
+      title: 'Top movies',
+      seeMoreLink: '/movies',
+      cardLayout: 'landscape',
+      items: DUPAHIYA_RECOMMENDATIONS.filter((i) => i.type === 'movie').concat(DUPAHIYA_RECOMMENDATIONS),
+    },
+    {
+      id: 'comedy-tv',
+      title: 'Comedy TV',
+      seeMoreLink: '/tv',
+      cardLayout: 'landscape',
+      items: DUPAHIYA_RECOMMENDATIONS,
+    },
+    {
+      id: 'action-adventure-tv',
+      title: 'Action & Adventure TV',
+      seeMoreLink: '/tv',
+      cardLayout: 'landscape',
+      items: DUPAHIYA_RECOMMENDATIONS,
+    },
+  ];
+}
+
 const DUPAHIYA_DETAILS: FullMediaDetail = {
   id: 'dupahiya',
   tmdbId: 998822,
@@ -1003,3 +1063,116 @@ export async function getFullMediaDetails(id: string): Promise<FullMediaDetail> 
     return DUPAHIYA_DETAILS;
   }
 }
+
+// ── Genre page ────────────────────────────────────────────────────────────────
+
+/** Maps the 9-dots genre slug → { label, movieGenreIds, tvGenreIds } */
+const GENRE_SLUG_MAP: Record<
+  string,
+  { label: string; movieIds: string; tvIds: string }
+> = {
+  action:      { label: 'Action',       movieIds: '28',        tvIds: '10759' },
+  comedy:      { label: 'Comedy',       movieIds: '35',        tvIds: '35'    },
+  crime:       { label: 'Crime',        movieIds: '80',        tvIds: '80'    },
+  drama:       { label: 'Drama',        movieIds: '18',        tvIds: '18'    },
+  scifi:       { label: 'Sci-Fi',       movieIds: '878',       tvIds: '10765' },
+  romance:     { label: 'Romance',      movieIds: '10749',     tvIds: '10749' },
+  horror:      { label: 'Horror',       movieIds: '27',        tvIds: '27'    },
+  family:      { label: 'Family',       movieIds: '10751',     tvIds: '10751' },
+  docs:        { label: 'Documentary',  movieIds: '99',        tvIds: '99'    },
+};
+
+export interface GenrePageData {
+  label: string;
+  heroItems: MediaItem[];
+  movieRow: CategoryRow;
+  tvRow: CategoryRow;
+}
+
+export async function getGenreResults(slug: string): Promise<GenrePageData | null> {
+  const meta = GENRE_SLUG_MAP[slug];
+  if (!meta) return null;
+
+  try {
+    const [moviesData, tvData, moviesData2, tvData2] = await Promise.all([
+      fetchTmdb('/discover/movie', {
+        with_genres: meta.movieIds,
+        sort_by: 'popularity.desc',
+        page: '1',
+      }),
+      fetchTmdb('/discover/tv', {
+        with_genres: meta.tvIds,
+        sort_by: 'popularity.desc',
+        page: '1',
+      }),
+      fetchTmdb('/discover/movie', {
+        with_genres: meta.movieIds,
+        sort_by: 'vote_average.desc',
+        'vote_count.gte': '300',
+        page: '1',
+      }),
+      fetchTmdb('/discover/tv', {
+        with_genres: meta.tvIds,
+        sort_by: 'vote_average.desc',
+        'vote_count.gte': '200',
+        page: '1',
+      }),
+    ]);
+
+    const movies: MediaItem[] = (moviesData.results || [])
+      .filter((i: any) => i.backdrop_path || i.poster_path)
+      .slice(0, 20)
+      .map((i: any) => formatTmdbItem(i, 'movie'));
+
+    const topMovies: MediaItem[] = (moviesData2.results || [])
+      .filter((i: any) => i.backdrop_path || i.poster_path)
+      .slice(0, 10)
+      .map((i: any) => formatTmdbItem(i, 'movie', undefined, 'MOST LIKED'));
+
+    const shows: MediaItem[] = (tvData.results || [])
+      .filter((i: any) => i.backdrop_path || i.poster_path)
+      .slice(0, 20)
+      .map((i: any) => formatTmdbItem(i, 'tv'));
+
+    const topShows: MediaItem[] = (tvData2.results || [])
+      .filter((i: any) => i.backdrop_path || i.poster_path)
+      .slice(0, 10)
+      .map((i: any) => formatTmdbItem(i, 'tv', undefined, 'MOST LIKED'));
+
+    // De-duplicate hero pool
+    const seen = new Set<string>();
+    const heroItems: MediaItem[] = [];
+    for (const item of [...movies, ...shows]) {
+      if (!seen.has(item.id) && item.backdropUrl) {
+        seen.add(item.id);
+        heroItems.push(item);
+        if (heroItems.length >= 6) break;
+      }
+    }
+
+    // Merge popular + top-rated, de-duplicate
+    const mergeRows = (popular: MediaItem[], top: MediaItem[]): MediaItem[] => {
+      const s = new Set<string>(popular.map(i => i.id));
+      return [...popular, ...top.filter(i => !s.has(i.id))];
+    };
+
+    return {
+      label: meta.label,
+      heroItems,
+      movieRow: {
+        id: `genre-movies-${slug}`,
+        title: `${meta.label} Movies`,
+        items: mergeRows(movies, topMovies),
+      },
+      tvRow: {
+        id: `genre-tv-${slug}`,
+        title: `${meta.label} TV Shows`,
+        items: mergeRows(shows, topShows),
+      },
+    };
+  } catch (err) {
+    console.error('getGenreResults error:', err);
+    return null;
+  }
+}
+

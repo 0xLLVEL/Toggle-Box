@@ -10,6 +10,7 @@ import {
   CheckIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  ToggleGoldBadgeIcon,
 } from './Icons';
 
 interface HeroCarouselProps {
@@ -97,9 +98,13 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({
       {/* Foreground Content */}
       <div className="hero-carousel-inner">
         <div className="hero-carousel-content" key={currentItem.id}>
-          {/* Eyebrow & Rank Pill */}
+          {/* Eyebrow & Rank Pill — Prime Video Style */}
           <div className="hero-carousel-kicker">
-            <span className="hero-carousel-badge">
+            <span className="hero-carousel-badge hero-carousel-gold-badge">
+              <ToggleGoldBadgeIcon size={13} />
+              Included with Tea+
+            </span>
+            <span className="hero-carousel-badge hero-carousel-rank-badge">
               <span className="hero-carousel-pulse-dot" />
               {badgePrefix} #{activeIndex + 1}
             </span>

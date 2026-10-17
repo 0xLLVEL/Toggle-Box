@@ -8,7 +8,7 @@ import { Navbar } from '@/components/Navbar';
 import { MediaRow } from '@/components/MediaRow';
 import { Footer } from '@/components/Footer';
 import { Toast } from '@/components/Toast';
-import { PageHero } from '@/components/PageHero';
+
 import { useWatchlist } from '@/context/WatchlistContext';
 
 export default function TeaPlusHomePage() {
@@ -22,8 +22,6 @@ export default function TeaPlusHomePage() {
   const [rows, setRows] = useState<CategoryRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [expandedRows, setExpandedRows] = useState(false);
-
-  const featuredItem = useMemo(() => rows[0]?.items[0] || null, [rows]);
 
   // Initial load of live TMDB data
   useEffect(() => {
@@ -85,7 +83,7 @@ export default function TeaPlusHomePage() {
       return [
         {
           id: 'search-results',
-          title: `Search Results for “${searchQuery}” (${searchResults.length})`,
+          title: `Search Results for "${searchQuery}" (${searchResults.length})`,
           items: searchResults,
         },
       ];
@@ -116,15 +114,9 @@ export default function TeaPlusHomePage() {
         watchlistCount={watchlist.length}
       />
 
-      {/* Main Content: Streaming Carousel Rows */}
-      <main className="main-content home-main-content">
-        {!searchQuery && featuredItem && (
-          <PageHero
-            backgroundImage={featuredItem.backdropUrl}
-            title="Find Something Worth Watching Tonight"
-          />
-        )}
 
+      {/* Main Content: Streaming Category Rows */}
+      <main className="main-content home-main-content">
         {isLoading ? (
           <div className="loading-skeleton-container">
             {[1, 2, 3].map((n) => (

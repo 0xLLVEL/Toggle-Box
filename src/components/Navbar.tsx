@@ -14,9 +14,11 @@ import {
   HelpIcon,
   LogoutIcon,
   SparklesIcon,
+  PuzzleIcon,
 } from './Icons';
 import { SearchModal } from './SearchModal';
 import { LanguageSelector } from './LanguageSelector';
+import { useProviders } from '@/context/ProviderContext';
 
 const genreDropdownItems = [
   {
@@ -140,6 +142,9 @@ export const Navbar: React.FC<NavbarProps> = ({
     return () => window.removeEventListener('keydown', handleGlobalKeyDown);
   }, []);
 
+  const { installedProviders } = useProviders();
+  const activeProvidersCount = installedProviders.filter((p) => p.isEnabled).length;
+
   const navLinks = [
     { href: '/', label: 'Home' },
     { href: '/movies', label: 'Movies' },
@@ -147,6 +152,11 @@ export const Navbar: React.FC<NavbarProps> = ({
     {
       href: '/mystuff',
       label: `My Stuff${watchlistCount > 0 ? ` (${watchlistCount})` : ''}`,
+    },
+    {
+      href: '/providers',
+      label: 'Extensions',
+      badge: activeProvidersCount > 0 ? activeProvidersCount : undefined,
     },
   ];
 
@@ -161,24 +171,10 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Navigation Links — Prime Video style */}
           <nav className="nav-links" aria-label="Main Navigation">
-            {navLinks.slice(0, 3).map((link) => {
+            {navLinks.map((link) => {
               const isActive =
                 link.href === '/' ? pathname === '/' : pathname.startsWith(link.href);
 
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={`nav-link${isActive ? ' nav-link-active' : ''}`}
-                >
-                  {link.label}
-                </Link>
-              );
-            })}
-
-            {/* My Stuff (Watchlist) */}
-            {navLinks.slice(3).map((link) => {
-              const isActive = pathname.startsWith(link.href);
               return (
                 <Link
                   key={link.href}

@@ -336,4 +336,17 @@ export const HistoryIcon: React.FC<{ size?: number; className?: string }> = ({ s
   </svg>
 );
 
+export const PuzzleIcon: React.FC<{ size?: number; className?: string }> = ({ size = 16, className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M19.439 7.85c0-1.57.802-2.54 1.838-2.54 1.037 0 1.723.97 1.723 2.54 0 1.571-.686 2.54-1.723 2.54H19v4h2.277c1.037 0 1.723.97 1.723 2.541 0 1.57-.686 2.54-1.723 2.54-1.036 0-1.838-.97-1.838-2.54H15v2.277c0 1.037-.97 1.723-2.541 1.723-1.57 0-2.54-.686-2.54-1.723V19H5.85c-1.57 0-2.54-.802-2.54-1.838 0-1.037.97-1.723 2.54-1.723H7v-4H4.723c-1.037 0-1.723-.97-1.723-2.54 0-1.571.686-2.541 1.723-2.541H7V4.149C7 3.112 7.97 2.426 9.541 2.426c1.57 0 2.54.686 2.54 1.723V7h2.277c1.037 0 1.723-.97 1.723-2.54 0-1.571.686-2.541 1.723-2.541 1.036 0 1.838.97 1.838 2.541V7.85z" />
+  </svg>
+);
+
+export const BoltIcon: React.FC<{ size?: number; className?: string }> = ({ size = 16, className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}>
+    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+  </svg>
+);
+
+
 

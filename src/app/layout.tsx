@@ -23,6 +23,8 @@ export const metadata: Metadata = {
   },
 };
 
+import { ProviderProvider } from '@/context/ProviderContext';
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -32,7 +34,9 @@ export default function RootLayout({
     <html lang="en" className={outfit.variable}>
       <body suppressHydrationWarning>
         <WatchlistProvider>
-          <LanguageProvider>{children}</LanguageProvider>
+          <LanguageProvider>
+            <ProviderProvider>{children}</ProviderProvider>
+          </LanguageProvider>
         </WatchlistProvider>
       </body>
     </html>

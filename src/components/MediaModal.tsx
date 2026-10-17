@@ -12,7 +12,9 @@ import {
   VolumeHighIcon,
   VolumeMuteIcon,
   ToggleGoldBadgeIcon,
+  BoltIcon,
 } from './Icons';
+import { StreamPlayerModal } from './StreamPlayerModal';
 
 interface MediaModalProps {
   item: MediaItem | null;
@@ -35,6 +37,7 @@ export const MediaModal: React.FC<MediaModalProps> = ({
   const [credits, setCredits] = useState<MediaCredits>({ cast: [], director: '' });
   const [episodes, setEpisodes] = useState<EpisodeItem[]>([]);
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+  const [isStreamOpen, setIsStreamOpen] = useState(false);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -122,11 +125,25 @@ export const MediaModal: React.FC<MediaModalProps> = ({
             <div className="modal-actions-row">
               <button
                 className="modal-btn-play"
-                onClick={() => setIsPlaying(!isPlaying)}
+                onClick={() => setIsStreamOpen(true)}
+                type="button"
+                title="Stream full title"
               >
                 <PlayIcon size={20} />
-                <span>{isPlaying ? 'Pause Preview' : 'Play Trailer'}</span>
+                <span>Watch Now</span>
               </button>
+
+              {trailerKey && (
+                <button
+                  className="modal-btn-icon"
+                  onClick={() => setIsPlaying(!isPlaying)}
+                  type="button"
+                  title={isPlaying ? 'Pause Trailer' : 'Watch Trailer'}
+                >
+                  <PlayIcon size={18} />
+                  <span>{isPlaying ? 'Pause' : 'Trailer'}</span>
+                </button>
+              )}
 
               <button
                 className={`modal-btn-icon ${isInWatchlist ? 'active-btn' : ''}`}
@@ -301,6 +318,21 @@ export const MediaModal: React.FC<MediaModalProps> = ({
           )}
         </div>
       </div>
+
+      {/* Stream Player Modal */}
+      <StreamPlayerModal
+        isOpen={isStreamOpen}
+        onClose={() => setIsStreamOpen(false)}
+        media={{
+          id: item.id,
+          tmdbId: item.tmdbId,
+          title: item.title,
+          type: item.type,
+          year: item.year,
+          currentSeason: selectedSeason,
+          currentEpisode: 1,
+        }}
+      />
     </div>
   );
 };

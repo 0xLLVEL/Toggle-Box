@@ -23,7 +23,9 @@ import {
   CloseIcon,
   VolumeHighIcon,
   VolumeMuteIcon,
+  BoltIcon,
 } from '@/components/Icons';
+import { StreamPlayerModal } from '@/components/StreamPlayerModal';
 
 export default function DetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -47,6 +49,8 @@ export default function DetailPage({ params }: { params: Promise<{ id: string }>
   const [isPlayingTrailer, setIsPlayingTrailer] = useState(false);
   const [isTrailerMuted, setIsTrailerMuted] = useState(true);
   const [showFullSynopsis, setShowFullSynopsis] = useState(false);
+  const [isStreamOpen, setIsStreamOpen] = useState(false);
+  const [streamEpisode, setStreamEpisode] = useState(1);
 
   useEffect(() => {
     let isMounted = true;
@@ -162,19 +166,16 @@ export default function DetailPage({ params }: { params: Promise<{ id: string }>
           <div className="detail-actions-banner-group">
             {/* Circular Action Buttons Row */}
             <div className="detail-circle-actions">
-              {/* Play / Trailer button */}
+              {/* Play / Stream button */}
               <button
                 className="detail-action-circle play-circle"
                 onClick={() => {
-                  if (detail.trailerKey) {
-                    setIsPlayingTrailer(!isPlayingTrailer);
-                  } else {
-                    triggerToast(`Playing ${detail.title} S${selectedSeason} E1`);
-                  }
+                  setStreamEpisode(1);
+                  setIsStreamOpen(true);
                 }}
-                title="Play"
+                title="Stream Now"
                 type="button"
-                aria-label="Play"
+                aria-label="Stream Now"
               >
                 <PlayIcon size={18} />
               </button>
@@ -253,14 +254,21 @@ export default function DetailPage({ params }: { params: Promise<{ id: string }>
 
             {/* White Free Trial Subscription Box */}
             <div className="detail-trial-box">
-              <div className="trial-pill-card">
+              <button
+                className="trial-pill-card"
+                onClick={() => {
+                  setStreamEpisode(1);
+                  setIsStreamOpen(true);
+                }}
+                type="button"
+              >
                 <span className="trial-pill-brand">Tea+</span>
-                <span className="trial-pill-text">7-day free trial</span>
-              </div>
+                <span className="trial-pill-text">Watch Now</span>
+              </button>
               <div className="trial-join-line">
                 <ToggleGoldBadgeIcon size={14} />
-                <span className="trial-join-text">Join Tea+</span>
-                <span className="trial-terms-text">Terms apply</span>
+                <span className="trial-join-text">Included with Tea+</span>
+                <span className="trial-terms-text">Instant Stream</span>
               </div>
             </div>
           </div>
@@ -403,11 +411,17 @@ export default function DetailPage({ params }: { params: Promise<{ id: string }>
                 <div
                   key={ep.num}
                   className="episode-card-item"
-                  onClick={() => triggerToast(`Playing Episode ${ep.num}: ${ep.title}`)}
+                  onClick={() => {
+                    setStreamEpisode(ep.num);
+                    setIsStreamOpen(true);
+                  }}
                   role="button"
                   tabIndex={0}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter') triggerToast(`Playing Episode ${ep.num}: ${ep.title}`);
+                    if (e.key === 'Enter') {
+                      setStreamEpisode(ep.num);
+                      setIsStreamOpen(true);
+                    }
                   }}
                 >
                   {/* Thumbnail still with gold badge at bottom left */}
@@ -598,6 +612,21 @@ export default function DetailPage({ params }: { params: Promise<{ id: string }>
 
       {/* Global Footer */}
       <Footer />
+
+      {/* Stream Player Modal for Zangetsu Extensions & Universal Streamers */}
+      <StreamPlayerModal
+        isOpen={isStreamOpen}
+        onClose={() => setIsStreamOpen(false)}
+        media={{
+          id: detail.id,
+          tmdbId: detail.tmdbId,
+          title: detail.title,
+          type: detail.type,
+          year: detail.year,
+          currentSeason: selectedSeason,
+          currentEpisode: streamEpisode,
+        }}
+      />
 
       {/* Toast notifications */}
       <Toast message={toastMessage} />

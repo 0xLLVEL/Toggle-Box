@@ -238,8 +238,8 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                       </div>
                     )}
 
-                    {/* Toggle Gold Bag Badge */}
-                    <div className="cinematic-card-gold" title="Included with Toggle Box">
+                    {/* Tea+ Gold Badge */}
+                    <div className="cinematic-card-gold" title="Included with Tea+">
                       <ToggleGoldBadgeIcon size={13} />
                     </div>
 

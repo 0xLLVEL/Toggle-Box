@@ -88,12 +88,12 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             <span>4K UHD</span>
           </button>
 
-          {/* TOGGLE Originals Toggle */}
+          {/* Tea+ Originals Toggle */}
           <button
             type="button"
             className={`filter-feature-btn ${filterState.onlyOriginals ? 'is-active' : ''}`}
             onClick={onToggleOriginals}
-            title="Filter by TOGGLE Originals"
+            title="Filter by Tea+ Originals"
           >
             <SparklesIcon size={13} />
             <span>Originals</span>

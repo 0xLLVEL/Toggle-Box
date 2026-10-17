@@ -11,7 +11,7 @@ import { Toast } from '@/components/Toast';
 import { PageHero } from '@/components/PageHero';
 import { useWatchlist } from '@/context/WatchlistContext';
 
-export default function ToggleBoxHomePage() {
+export default function TeaPlusHomePage() {
   const router = useRouter();
   const { watchlist, savedItems, toggleWatchlist, toastMessage, triggerToast, watchProgress } =
     useWatchlist();

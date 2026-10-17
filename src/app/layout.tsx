@@ -12,13 +12,13 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: 'Toggle Box - Stream Movies, TV Shows & Originals',
+  title: 'Tea+ - Stream Movies, TV Shows & Originals',
   description:
-    'Experience the best in entertainment on Toggle Box. Stream blockbuster movies, award-winning series, and exclusive originals.',
-  keywords: ['Toggle Box', 'Prime Video', 'Streaming', 'Movies', 'TV Shows', 'Watch Online'],
+    'Experience the best in entertainment on Tea+. Stream blockbuster movies, award-winning series, and exclusive originals.',
+  keywords: ['Tea+', 'Tea Plus', 'Streaming', 'Movies', 'TV Shows', 'Watch Online'],
   openGraph: {
-    title: 'Toggle Box - Stream Movies, TV Shows & Originals',
-    description: 'Watch anywhere. Cancel anytime. Start your Toggle Box experience.',
+    title: 'Tea+ - Stream Movies, TV Shows & Originals',
+    description: 'Watch anywhere. Cancel anytime. Start your Tea+ experience.',
     type: 'website',
   },
 };

@@ -110,7 +110,7 @@ export const MediaModal: React.FC<MediaModalProps> = ({
           <div className="modal-hero-content">
             <div className="modal-badge-row">
               <span className="modal-gold-tag">
-                <ToggleGoldBadgeIcon size={14} /> Included with Toggle Box
+                <ToggleGoldBadgeIcon size={14} /> Included with Tea+
               </span>
               {item.badge && <span className="modal-category-tag">{item.badge}</span>}
             </div>
@@ -287,7 +287,7 @@ export const MediaModal: React.FC<MediaModalProps> = ({
                 <h4>About This Production</h4>
                 <p>
                   Captured with state-of-the-art cinematic optics and calibrated for HDR10+ and Dolby
-                  Vision on Toggle Box. Features multi-channel spatial audio.
+                  Vision on Tea+. Features multi-channel spatial audio.
                 </p>
               </div>
               <div className="trivia-card">

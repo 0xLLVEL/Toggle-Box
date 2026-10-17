@@ -1,31 +1,33 @@
 import React from 'react';
 
-export const ToggleBoxLogo: React.FC<{ className?: string; height?: number }> = ({
+export const TeaPlusLogo: React.FC<{ className?: string; height?: number }> = ({
   className = '',
   height = 28,
 }) => (
   <svg
     height={height}
-    viewBox="0 0 76 34"
+    viewBox="0 0 68 34"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
     className={`toggle-box-logo ${className}`}
-    aria-label="Toggle Box Logo"
+    aria-label="Tea+ Logo"
   >
     {/* ================= WORDMARK ================= */}
     <text
       x="1"
-      y="23.5"
+      y="24"
       fill="#ffffff"
       fontFamily="var(--font-outfit), 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
       fontWeight="900"
-      fontSize="19"
+      fontSize="22"
       letterSpacing="-0.03em"
     >
-      T-BOX
+      Tea<tspan fill="#00A8E1" fontWeight="900">+</tspan>
     </text>
   </svg>
 );
+
+export const ToggleBoxLogo = TeaPlusLogo;
 
 export const SearchIcon: React.FC<{ size?: number; className?: string }> = ({ size = 20, className = '' }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className={className}>

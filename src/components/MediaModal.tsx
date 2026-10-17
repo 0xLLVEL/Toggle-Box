@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import type { MediaItem, EpisodeItem, MediaCredits } from '@/types/media';
 import { getTrailerKey, getMediaCredits, getTvEpisodes } from '@/services/tmdb';
 import {
@@ -14,7 +15,6 @@ import {
   ToggleGoldBadgeIcon,
   BoltIcon,
 } from './Icons';
-import { StreamPlayerModal } from './StreamPlayerModal';
 
 interface MediaModalProps {
   item: MediaItem | null;
@@ -29,6 +29,7 @@ export const MediaModal: React.FC<MediaModalProps> = ({
   isInWatchlist,
   onToggleWatchlist,
 }) => {
+  const router = useRouter();
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const [activeTab, setActiveTab] = useState<'episodes' | 'details' | 'more'>('episodes');
@@ -37,7 +38,6 @@ export const MediaModal: React.FC<MediaModalProps> = ({
   const [credits, setCredits] = useState<MediaCredits>({ cast: [], director: '' });
   const [episodes, setEpisodes] = useState<EpisodeItem[]>([]);
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
-  const [isStreamOpen, setIsStreamOpen] = useState(false);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -125,7 +125,10 @@ export const MediaModal: React.FC<MediaModalProps> = ({
             <div className="modal-actions-row">
               <button
                 className="modal-btn-play"
-                onClick={() => setIsStreamOpen(true)}
+                onClick={() => {
+                  onClose();
+                  router.push(`/watch/${item.id}?season=${selectedSeason}&episode=1`);
+                }}
                 type="button"
                 title="Stream full title"
               >
@@ -259,7 +262,16 @@ export const MediaModal: React.FC<MediaModalProps> = ({
               <div className="episodes-list">
                 {episodes.length > 0 ? (
                   episodes.map((ep) => (
-                    <div key={ep.num} className="episode-card">
+                    <div
+                      key={ep.num}
+                      className="episode-card"
+                      onClick={() => {
+                        onClose();
+                        router.push(`/watch/${item.id}?season=${selectedSeason}&episode=${ep.num}`);
+                      }}
+                      role="button"
+                      tabIndex={0}
+                    >
                       <div className="episode-thumbnail">
                         {ep.stillUrl ? (
                           <img
@@ -318,21 +330,6 @@ export const MediaModal: React.FC<MediaModalProps> = ({
           )}
         </div>
       </div>
-
-      {/* Stream Player Modal */}
-      <StreamPlayerModal
-        isOpen={isStreamOpen}
-        onClose={() => setIsStreamOpen(false)}
-        media={{
-          id: item.id,
-          tmdbId: item.tmdbId,
-          title: item.title,
-          type: item.type,
-          year: item.year,
-          currentSeason: selectedSeason,
-          currentEpisode: 1,
-        }}
-      />
     </div>
   );
 };

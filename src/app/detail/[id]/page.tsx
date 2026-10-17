@@ -25,7 +25,6 @@ import {
   VolumeMuteIcon,
   BoltIcon,
 } from '@/components/Icons';
-import { StreamPlayerModal } from '@/components/StreamPlayerModal';
 
 export default function DetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -170,8 +169,7 @@ export default function DetailPage({ params }: { params: Promise<{ id: string }>
               <button
                 className="detail-action-circle play-circle"
                 onClick={() => {
-                  setStreamEpisode(1);
-                  setIsStreamOpen(true);
+                  router.push(`/watch/${detail.id}?season=${selectedSeason}&episode=1`);
                 }}
                 title="Stream Now"
                 type="button"
@@ -257,8 +255,7 @@ export default function DetailPage({ params }: { params: Promise<{ id: string }>
               <button
                 className="trial-pill-card"
                 onClick={() => {
-                  setStreamEpisode(1);
-                  setIsStreamOpen(true);
+                  router.push(`/watch/${detail.id}?season=${selectedSeason}&episode=1`);
                 }}
                 type="button"
               >
@@ -412,15 +409,13 @@ export default function DetailPage({ params }: { params: Promise<{ id: string }>
                   key={ep.num}
                   className="episode-card-item"
                   onClick={() => {
-                    setStreamEpisode(ep.num);
-                    setIsStreamOpen(true);
+                    router.push(`/watch/${detail.id}?season=${selectedSeason}&episode=${ep.num}`);
                   }}
                   role="button"
                   tabIndex={0}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
-                      setStreamEpisode(ep.num);
-                      setIsStreamOpen(true);
+                      router.push(`/watch/${detail.id}?season=${selectedSeason}&episode=${ep.num}`);
                     }
                   }}
                 >
@@ -612,21 +607,6 @@ export default function DetailPage({ params }: { params: Promise<{ id: string }>
 
       {/* Global Footer */}
       <Footer />
-
-      {/* Stream Player Modal for Zangetsu Extensions & Universal Streamers */}
-      <StreamPlayerModal
-        isOpen={isStreamOpen}
-        onClose={() => setIsStreamOpen(false)}
-        media={{
-          id: detail.id,
-          tmdbId: detail.tmdbId,
-          title: detail.title,
-          type: detail.type,
-          year: detail.year,
-          currentSeason: selectedSeason,
-          currentEpisode: streamEpisode,
-        }}
-      />
 
       {/* Toast notifications */}
       <Toast message={toastMessage} />

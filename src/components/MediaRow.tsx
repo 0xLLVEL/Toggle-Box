@@ -80,7 +80,10 @@ const MediaRowInner: React.FC<MediaRowProps> = ({
       {/* Row Header */}
       <div className="row-header">
         <div className="row-title-left">
-          <h2 className="row-title">{row.title}</h2>
+          <h2 className="row-title" data-testid="carousel-title">
+            <span className="row-title-text">{row.title}</span>
+            <ChevronRightIcon size={14} className="row-title-chevron" aria-hidden="true" />
+          </h2>
           {row.isTop10 && (
             <button
               type="button"

@@ -129,8 +129,8 @@ Ensure you have the following installed on your machine:
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/tea-plus.git
-cd tea-plus
+git clone https://github.com/Dattebayoolo/teaplus.git
+cd teaplus
 ```
 
 ### 2. Install Dependencies
@@ -288,6 +288,6 @@ Distributed under the **MIT License**. See `LICENSE` for more information.
 
 Crafted with 🖤 for cinematic entertainment enthusiasts.
 
-**[Tea+](https://github.com/your-username/tea-plus)** • Stream Movies, TV Shows & Originals
+**[Tea+](https://github.com/Dattebayoolo/teaplus)** • Stream Movies, TV Shows & Originals
 
 </div>

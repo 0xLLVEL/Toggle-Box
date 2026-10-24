@@ -59,7 +59,8 @@ interface ProviderContextValue {
     title: string,
     type: 'movie' | 'tv',
     episodeNumber?: number,
-    onProgress?: (providerId: string, index: number, total: number) => void
+    onProgress?: (providerId: string, index: number, total: number) => void,
+    genres?: string[]
   ) => Promise<{ sources: ProviderVideoSource[]; episodes: ProviderEpisode[]; providerId: string; bestMatchTitle?: string } | null>;
   executeProvider: (providerId: string, method: string, args?: any[]) => Promise<any>;
 }
@@ -282,8 +283,9 @@ export const ProviderProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           url: ep.url,
           season: ep.season,
         }));
-      } catch (err) {
-        console.error('Failed to get episodes:', err);
+      } catch (err: any) {
+        // getEpisodes failing is expected for movie providers — warn only
+        console.warn(`[${providerId}] getEpisodes failed:`, err?.message ?? err);
         return [];
       }
     },
@@ -319,13 +321,30 @@ export const ProviderProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             isExtension: true,
           };
         });
-      } catch (err) {
-        console.error('Failed to get video sources:', err);
+      } catch (err: any) {
+        // Provider-level failure (no links, timeout) — warn only
+        console.warn(`[${providerId}] getVideoSources failed:`, err?.message ?? err);
         return [];
       }
     },
     [installedProviders, executeProvider]
   );
+
+  /**
+   * Score how well a provider result title matches the query.
+   * Returns 0–1 (1 = perfect match).
+   */
+  const titleScore = (query: string, candidate: string): number => {
+    const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim();
+    const q = norm(query);
+    const c = norm(candidate);
+    if (q === c) return 1;
+    // Word-overlap ratio
+    const qWords = new Set(q.split(/\s+/));
+    const cWords = c.split(/\s+/);
+    const hits = cWords.filter((w) => qWords.has(w)).length;
+    return hits / Math.max(qWords.size, cWords.length, 1);
+  };
 
   const resolveProviderStream = useCallback(
     async (
@@ -347,14 +366,31 @@ export const ProviderProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           return { sources: [], episodes: [] };
         }
 
-        const match = results[0];
+        // Pick the best title match rather than blindly taking results[0].
+        // Providers sometimes return loosely ranked lists; a word-overlap score
+        // ensures we pick the correct content when the top result is off.
+        const scored = results
+          .map((r: any) => ({ r, score: titleScore(title, r.title || '') }))
+          .sort((a, b) => b.score - a.score);
+
+        // Reject the entire provider result if no match is good enough.
+        // A threshold of 0.4 means ≥40% word overlap — low enough for partial
+        // titles ("Avengers" matching "Avengers: Endgame") but high enough to
+        // reject anime providers returning completely unrelated content.
+        const MIN_TITLE_SCORE = 0.4;
+        if (scored[0].score < MIN_TITLE_SCORE) {
+          return { sources: [], episodes: [] };
+        }
+
+        const match = scored[0].r;
+
         let eps: ProviderEpisode[] = [];
         let sources: ProviderVideoSource[] = [];
 
         try {
           eps = await getEpisodes(providerId, match.url);
         } catch (e) {
-          // movie providers may not have getEpisodes
+          // movie providers may not have getEpisodes — ignore
         }
 
         if (eps && eps.length > 0) {
@@ -365,13 +401,15 @@ export const ProviderProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         }
 
         const result = { sources, episodes: eps, bestMatchTitle: match.title };
-        // Store in cache only when we have sources
+        // Cache only when we have sources
         if (sources.length > 0) {
           STREAM_RESULT_CACHE.set(cacheKey, { result, ts: Date.now() });
         }
         return result;
-      } catch (err) {
-        console.error(`Failed to resolve stream on ${providerId}:`, err);
+      } catch (err: any) {
+        // Provider-level failures ("no download links", timeout, etc.) are
+        // expected outcomes — downgrade to warn to avoid console noise.
+        console.warn(`[${providerId}] stream resolve failed:`, err?.message ?? err);
         return { sources: [], episodes: [] };
       }
     },
@@ -381,50 +419,70 @@ export const ProviderProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   /**
    * Race all enabled providers in parallel — calls onProgress for each attempt
    * and resolves as soon as the first provider returns sources.
+   *
+   * Fix: onProgress is fired via a side-effect tap that is independent of the
+   * Promise.any race. Previously, Promise.any short-circuited as soon as the
+   * first winner resolved, silently dropping onProgress calls for every other
+   * provider still in flight — leaving their status pips permanently "pending".
    */
   const resolveAllProviders = useCallback(
     async (
       title: string,
       type: 'movie' | 'tv',
       episodeNumber: number = 1,
-      onProgress?: (providerId: string, index: number, total: number) => void
+      onProgress?: (providerId: string, index: number, total: number) => void,
+      genres: string[] = []
     ): Promise<{ sources: ProviderVideoSource[]; episodes: ProviderEpisode[]; providerId: string; bestMatchTitle?: string } | null> => {
-      const active = installedProviders.filter((p) => p.isEnabled);
+      // Detect anime content from TMDB genres so anime providers only run
+      // when the content is actually anime (Animation genre).
+      // Without this, anime providers query non-anime titles, find a loosely
+      // named anime, and play the wrong content.
+      const isAnimeContent = genres.some((g) => g.toLowerCase() === 'animation');
+
+      const active = installedProviders.filter((p) => {
+        if (!p.isEnabled) return false;
+        // Anime-only providers: only include when the content is actually anime.
+        // Previously only blocked for movies; now blocked for all non-anime
+        // content (movies AND non-anime tv series like "Breaking Bad").
+        if (p.type === 'anime' && !isAnimeContent) return false;
+        return true;
+      });
       if (active.length === 0) return null;
 
       const total = active.length;
 
-      // Build a promise per provider that resolves with { result, providerId } or null
-      const providerRaces = active.map((provider, index) =>
-        resolveProviderStream(provider.id, title, type, episodeNumber)
+      // For each provider, build two things:
+      //  1. A side-effect promise that fires onProgress as soon as the provider
+      //     finishes — completely decoupled from the race below.
+      //  2. A "winner" promise that rejects (so Promise.any skips it) if the
+      //     provider returned no sources, and resolves with the result otherwise.
+      const winnerPromises = active.map((provider, index) => {
+        const base = resolveProviderStream(provider.id, title, type, episodeNumber)
           .then((result) => {
+            // Always notify progress immediately when this provider is done
             onProgress?.(provider.id, index, total);
-            if (result.sources && result.sources.length > 0) {
-              return { ...result, providerId: provider.id };
-            }
-            return null;
+            return result;
           })
           .catch(() => {
+            // Provider threw — still notify progress
             onProgress?.(provider.id, index, total);
-            return null;
-          })
-      );
+            return { sources: [] as ProviderVideoSource[], episodes: [] as ProviderEpisode[] };
+          });
 
-      // Use Promise.any to get the first non-null resolution
-      // Fallback: sequential if Promise.any not available
+        // Expose a promise for the race: resolves only when sources were found,
+        // otherwise rejects so Promise.any continues waiting for other providers.
+        return base.then((result) => {
+          if (result.sources && result.sources.length > 0) {
+            return { ...result, providerId: provider.id };
+          }
+          throw new Error('no sources');
+        });
+      });
+
       try {
-        // Filter out nulls: race until first success
-        const result = await (Promise as any).any(
-          providerRaces.map((p) =>
-            p.then((r: any) => {
-              if (!r) throw new Error('no result');
-              return r;
-            })
-          )
-        );
-        return result;
+        return await Promise.any(winnerPromises);
       } catch {
-        // All providers failed
+        // AggregateError — all providers either failed or returned no sources
         return null;
       }
     },

@@ -32,6 +32,14 @@ declare global {
   }
 }
 
+const GTA_HINTS = [
+  'HINT: Tea+ automatically scans multiple decentralized extensions to stream the highest-bitrate source available.',
+  'HINT: Press [F] to toggle Fullscreen, [SPACE] to pause or resume playback, and [M] to mute audio.',
+  'HINT: If a stream buffers, switch provider mirrors anytime from the Extensions menu in player controls.',
+  'HINT: Multi-language audio tracks and CC subtitles can be toggled on the fly during playback.',
+  'HINT: Install additional streaming extensions from the Extensions hub to unlock extra 4K mirrors.',
+];
+
 export default function WatchPlayerPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const mediaId = resolvedParams.id;
@@ -95,8 +103,11 @@ export default function WatchPlayerPage({ params }: { params: Promise<{ id: stri
   const hlsRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const hideControlsTimeout = useRef<any>(null);
-  // Guard so auto-scan only runs once per media+episode
-  const autoScanDoneRef = useRef(false);
+  // Guard: stores "mediaId:episode" of the last started scan.
+  // Using a compound key avoids the effect-ordering race where the old boolean
+  // reset effect ran AFTER the scan effect (both triggered by selectedEpisode),
+  // causing episode changes to silently skip re-scanning.
+  const lastScanKeyRef = useRef<string>('');
 
   // 1. Fetch Media Details
   useEffect(() => {
@@ -133,11 +144,29 @@ export default function WatchPlayerPage({ params }: { params: Promise<{ id: stri
     }
   }, []);
 
+  // ── Providers that will actually be queried for this content type ────────────
+  // Mirrors the filter in resolveAllProviders: anime providers only run when
+  // the content has the 'Animation' TMDB genre. This prevents pips from
+  // showing for providers that won't actually be queried.
+  const scanProviders = useMemo(() => {
+    const isAnimeContent = (detail?.genres ?? []).some(
+      (g) => g.toLowerCase() === 'animation'
+    );
+    return enabledExtensions.filter((p) => {
+      if (p.type === 'anime' && !isAnimeContent) return false;
+      return true;
+    });
+  }, [enabledExtensions, detail]);
+
   // 2. Parallel auto-scan — all providers race simultaneously
   useEffect(() => {
     if (!detail || enabledExtensions.length === 0) return;
-    if (autoScanDoneRef.current) return;
-    autoScanDoneRef.current = true;
+
+    // Key-based guard: only re-scan when the actual content+episode changes,
+    // not when callback references refresh (installedProviders reload, etc.).
+    const scanKey = `${mediaId}:${selectedEpisode}`;
+    if (lastScanKeyRef.current === scanKey) return;
+    lastScanKeyRef.current = scanKey;
 
     let isMounted = true;
     setIsAutoScanning(true);
@@ -145,9 +174,9 @@ export default function WatchPlayerPage({ params }: { params: Promise<{ id: stri
     setScanProgress(5);
     setFinishedProviderIds(new Set());
     setWinnerProviderId('');
-    setScanStep(`Checking ${enabledExtensions.length} sources in parallel...`);
+    setScanStep(`Checking ${scanProviders.length} sources in parallel...`);
 
-    const total = enabledExtensions.length;
+    const total = scanProviders.length;
     let finishedCount = 0;
 
     resolveAllProviders(
@@ -160,13 +189,14 @@ export default function WatchPlayerPage({ params }: { params: Promise<{ id: stri
         const pct = Math.min(90, Math.round((finishedCount / total) * 90));
         setScanProgress(pct);
         setFinishedProviderIds((prev) => new Set([...prev, providerId]));
-      }
+      },
+      detail.genres ?? []
     )
       .then((winner) => {
         if (!isMounted) return;
         if (winner && winner.sources.length > 0) {
           setScanProgress(100);
-          const prov = enabledExtensions.find((e) => e.id === winner.providerId);
+          const prov = scanProviders.find((e) => e.id === winner.providerId);
           setScanStep(`Found on ${prov?.name || winner.providerId}!`);
           setWinnerProviderId(winner.providerId);
 
@@ -188,7 +218,10 @@ export default function WatchPlayerPage({ params }: { params: Promise<{ id: stri
         } else {
           setScanProgress(100);
           setScanStep('No working source found.');
-          setSelectedProviderId(enabledExtensions[0]?.id || '');
+          // NOTE: Do NOT set selectedProviderId here — doing so triggers the
+          // manual-switch useEffect (which watches selectedProviderId), which
+          // would set isResolvingStream=true and hide the warning banner.
+          // The user selects an extension manually via the banner's action pills.
           setSources([]);
           setSelectedSource(null);
           setStatusMessage(
@@ -209,7 +242,7 @@ export default function WatchPlayerPage({ params }: { params: Promise<{ id: stri
     return () => {
       isMounted = false;
     };
-  }, [detail, enabledExtensions, selectedEpisode, resolveAllProviders]);
+  }, [detail, enabledExtensions, selectedEpisode, resolveAllProviders, scanProviders, mediaId]);
 
   // When user manually switches extension, re-resolve (not auto-scan)
   useEffect(() => {
@@ -450,120 +483,281 @@ export default function WatchPlayerPage({ params }: { params: Promise<{ id: stri
         stillUrl: detail?.backdropUrl || '',
       }));
 
-  // Also reset auto-scan guard when episode changes so re-scanning works
+  // (Episode-change scan is handled by lastScanKeyRef in the scan effect above;
+  //  no separate reset effect needed.)
+
+  const [gtaTipIndex, setGtaTipIndex] = useState(0);
+
   useEffect(() => {
-    autoScanDoneRef.current = false;
-    setIsAutoScanning(true);
-    setScanProgress(0);
-    setScanStep('Finding best source...');
-  }, [selectedEpisode]);
+    if (!isAutoScanning) return;
+    const interval = setInterval(() => {
+      setGtaTipIndex((prev) => (prev + 1) % GTA_HINTS.length);
+    }, 4500);
+    return () => clearInterval(interval);
+  }, [isAutoScanning]);
 
   if (isLoadingDetail || !detail) {
     return (
-      <div className="pv-loading-screen">
-        <div className="pv-loader-ring" />
+      <div className="gta-loading-screen">
+        <div className="gta-ls-art-layer gta-initial-bg" />
+        <div className="gta-ls-vignette" />
+        <div className="gta-ls-scanlines" />
+
+        <div className="gta-ls-top-bar">
+          <button
+            className="gta-ls-back-btn"
+            onClick={() => router.back()}
+            type="button"
+            aria-label="Return to menu"
+          >
+            <span className="gta-key-pill">ESC</span>
+            <span className="gta-back-text">RETURN</span>
+          </button>
+          <div className="gta-ls-top-right">
+            <div className="gta-wanted-stars">
+              <span className="gta-star active">★</span>
+              <span className="gta-star active">★</span>
+              <span className="gta-star active">★</span>
+              <span className="gta-star active">★</span>
+              <span className="gta-star active">★</span>
+            </div>
+            <div className="gta-emblem-badge">
+              <span className="gta-emblem-tea">TEA</span>
+              <span className="gta-emblem-v">V</span>
+              <span className="gta-emblem-sub">ONLINE</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="gta-ls-bottom-right">
+          <div className="gta-spinner-wrap">
+            <svg className="gta-spinner-svg" viewBox="0 0 44 44">
+              <circle
+                className="gta-spinner-track"
+                cx="22"
+                cy="22"
+                r="16"
+                fill="none"
+                stroke="rgba(255, 255, 255, 0.18)"
+                strokeWidth="3.5"
+              />
+              <circle
+                className="gta-spinner-blade"
+                cx="22"
+                cy="22"
+                r="16"
+                fill="none"
+                stroke="#ffffff"
+                strokeWidth="3.5"
+                strokeDasharray="24 76"
+                strokeLinecap="round"
+              />
+            </svg>
+          </div>
+          <div className="gta-loading-meta">
+            <span className="gta-loading-label">INITIALIZING...</span>
+            <span className="gta-loading-sub">CONNECTING TO TEA+ NETWORK</span>
+          </div>
+        </div>
       </div>
     );
   }
 
-  // Prime Video style loading screen while auto-scanning sources
+  // GTA 5 style loading screen while auto-scanning sources
   if (isAutoScanning) {
     const isDone = scanProgress === 100;
+    const bgUrl = detail.backdropUrl || detail.posterUrl || '/api/media/media_1791277209569.png';
+    const numStars = Math.min(5, Math.max(3, Math.round(((detail.voteAverage || 7.5) / 10) * 5)));
+
     return (
       <div
-        className="pv-loading-screen"
+        className="gta-loading-screen"
         style={
-          detail.backdropUrl
-            ? { '--pv-bg': `url(${detail.backdropUrl})` } as React.CSSProperties
-            : {}
+          {
+            '--pv-bg': `url("${bgUrl}")`,
+          } as React.CSSProperties
         }
       >
-        {/* Blurred backdrop */}
-        <div className="pv-ls-backdrop" />
-        {/* Scrim gradients */}
-        <div className="pv-ls-scrim" />
+        {/* Fullscreen cinematic backdrop with Ken Burns motion */}
+        <div className="gta-ls-art-layer" />
 
-        {/* Top-left back button */}
-        <button
-          className="pv-ls-back"
-          onClick={() => router.back()}
-          type="button"
-          aria-label="Go back"
-        >
-          <ChevronLeftIcon size={18} />
-        </button>
+        {/* Vintage vignette & lighting gradients */}
+        <div className="gta-ls-vignette" />
 
-        {/* Centre content card */}
-        <div className="pv-ls-card">
-          {/* Poster */}
-          {detail.posterUrl && (
-            <img src={detail.posterUrl} alt={detail.title} className="pv-ls-poster" />
-          )}
+        {/* Subtle retro scanlines */}
+        <div className="gta-ls-scanlines" />
 
-          <div className="pv-ls-meta">
-            {/* Brand */}
-            <span className="pv-ls-brand">
-              <ToggleGoldBadgeIcon size={11} />
-              Included with Tea+
-            </span>
+        {/* Top HUD Bar */}
+        <div className="gta-ls-top-bar">
+          <button
+            className="gta-ls-back-btn"
+            onClick={() => router.back()}
+            type="button"
+            aria-label="Return to menu"
+          >
+            <span className="gta-key-pill">ESC</span>
+            <span className="gta-back-text">RETURN TO MENU</span>
+          </button>
 
-            {/* Title */}
-            <h1 className="pv-ls-title">{detail.title}</h1>
+          <div className="gta-ls-top-right">
+            <div
+              className="gta-wanted-stars"
+              title={`Rating: ${detail.voteAverage ? detail.voteAverage.toFixed(1) : '8.0'} / 10`}
+            >
+              {[1, 2, 3, 4, 5].map((s) => (
+                <span key={s} className={`gta-star ${s <= numStars ? 'active' : ''}`}>
+                  ★
+                </span>
+              ))}
+            </div>
+            <div className="gta-emblem-badge">
+              <span className="gta-emblem-tea">TEA</span>
+              <span className="gta-emblem-v">V</span>
+              <span className="gta-emblem-sub">ONLINE</span>
+            </div>
+          </div>
+        </div>
 
-            {/* Episode label for TV */}
+        {/* Main Content Grid: Dossier on Left, Character/Poster on Right */}
+        <div className="gta-ls-content-grid">
+          {/* Left: Mission / Briefing Dossier */}
+          <div className="gta-ls-dossier">
+            <div className="gta-ls-brand-row">
+              <span className="gta-badge-pill">★ TEA+ EXCLUSIVE</span>
+              <span className="gta-badge-type">
+                {detail.type === 'tv' ? 'EPISODIC SERIES' : 'FEATURE FILM'}
+              </span>
+            </div>
+
+            <h1 className="gta-ls-title">{detail.title}</h1>
+
             {detail.type === 'tv' && selectedEpisode > 0 && (
-              <p className="pv-ls-ep">
-                Season {selectedSeason} &nbsp;·&nbsp; Episode {selectedEpisode}
-                {currentEpDetail ? ` — ${currentEpDetail.title}` : ''}
+              <p className="gta-ls-ep-badge">
+                SEASON {selectedSeason} &nbsp;·&nbsp; EPISODE {selectedEpisode}
+                {currentEpDetail ? ` — ${currentEpDetail.title.toUpperCase()}` : ''}
               </p>
             )}
 
-            {/* Genre / year metadata strip */}
-            <div className="pv-ls-tags">
-              {detail.year && <span className="pv-ls-tag">{detail.year}</span>}
+            {/* HUD Metadata Tags */}
+            <div className="gta-ls-hud-tags">
+              {detail.year && <span className="gta-hud-tag">[{detail.year}]</span>}
+              {detail.rating && <span className="gta-hud-tag">[{detail.rating}]</span>}
               {detail.voteAverage ? (
-                <span className="pv-ls-tag">{detail.voteAverage.toFixed(1)} ★</span>
+                <span className="gta-hud-tag gold">[{detail.voteAverage.toFixed(1)} ★]</span>
               ) : null}
-              {detail.rating && <span className="pv-ls-tag">{detail.rating}</span>}
-              <span className="pv-ls-tag">{detail.type === 'tv' ? 'Series' : 'Movie'}</span>
+              <span className="gta-hud-tag">[4K ULTRA HD]</span>
+              <span className="gta-hud-tag">[5.1 AUDIO]</span>
             </div>
 
-            {/* Progress bar */}
-            <div className="pv-ls-bar-track">
-              <div
-                className="pv-ls-bar-fill"
-                style={{ width: `${scanProgress}%` }}
-              />
+            {/* GTA 5 Cycling Hints Box */}
+            <div className="gta-ls-hint-box">
+              <div className="gta-hint-header">
+                <span className="gta-hint-icon">ⓘ</span> GAMEPLAY HINT
+              </div>
+              <p className="gta-hint-text" key={gtaTipIndex}>
+                {GTA_HINTS[gtaTipIndex]}
+              </p>
             </div>
 
-            {/* Status row */}
-            <div className="pv-ls-status-row">
-              {!isDone ? (
-                <>
-                  <div className="pv-ls-spinner" />
-                  <span className="pv-ls-status-text">{scanStep}</span>
-                </>
-              ) : (
-                <span className={`pv-ls-status-text ${scanProgress === 100 && sources.length === 0 ? 'pv-ls-failed' : 'pv-ls-ok'}`}>
-                  {scanStep}
+            {/* Mission / Scanner Progress Bar */}
+            <div className="gta-ls-progress-block">
+              <div className="gta-progress-header">
+                <span className="gta-progress-status">
+                  {!isDone ? (
+                    <>
+                      <span className="gta-pulse-dot" />
+                      SCANNING SATELLITE FEEDS:&nbsp;
+                      <strong className="gta-step-highlight">{scanStep}</strong>
+                    </>
+                  ) : (
+                    <span
+                      className={`gta-step-highlight ${
+                        sources.length === 0 ? 'failed' : 'gold'
+                      }`}
+                    >
+                      ★ {scanStep}
+                    </span>
+                  )}
                 </span>
-              )}
-            </div>
+                <span className="gta-progress-pct">{scanProgress}%</span>
+              </div>
 
-            {/* Extension pips */}
-            <div className="pv-ls-pips">
-              {enabledExtensions.map((ext) => {
-                const done = finishedProviderIds.has(ext.id);
-                const winner = winnerProviderId === ext.id;
-                return (
-                  <div
-                    key={ext.id}
-                    className={`pv-ls-pip ${winner ? 'winner' : done ? 'done' : 'pending'}`}
-                    title={ext.name}
-                  />
-                );
-              })}
+              <div className="gta-bar-track">
+                <div className="gta-bar-fill" style={{ width: `${scanProgress}%` }} />
+              </div>
+
+              {/* Provider Radar Nodes */}
+              <div className="gta-provider-radar">
+                {scanProviders.map((ext) => {
+                  const done = finishedProviderIds.has(ext.id);
+                  const winner = winnerProviderId === ext.id;
+                  return (
+                    <div
+                      key={ext.id}
+                      className={`gta-radar-chip ${
+                        winner ? 'winner' : done ? 'done' : 'scanning'
+                      }`}
+                      title={ext.name}
+                    >
+                      <span className="gta-radar-blip" />
+                      <span className="gta-radar-name">{ext.name}</span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
+          </div>
+
+          {/* Right: GTA Style Character / Box Art Poster */}
+          {detail.posterUrl && (
+            <div className="gta-ls-poster-container">
+              <div className="gta-ls-poster-frame">
+                <img
+                  src={detail.posterUrl}
+                  alt={detail.title}
+                  className="gta-ls-poster-img"
+                />
+                <div className="gta-ls-poster-stamp">TEA+ ARCHIVE</div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Bottom Right: Iconic GTA 5 Spinning Ring & Loading Text */}
+        <div className="gta-ls-bottom-right">
+          <div className="gta-spinner-wrap">
+            <svg className="gta-spinner-svg" viewBox="0 0 44 44">
+              <circle
+                className="gta-spinner-track"
+                cx="22"
+                cy="22"
+                r="16"
+                fill="none"
+                stroke="rgba(255, 255, 255, 0.18)"
+                strokeWidth="3.5"
+              />
+              <circle
+                className="gta-spinner-blade"
+                cx="22"
+                cy="22"
+                r="16"
+                fill="none"
+                stroke="#ffffff"
+                strokeWidth="3.5"
+                strokeDasharray="24 76"
+                strokeLinecap="round"
+              />
+            </svg>
+          </div>
+          <div className="gta-loading-meta">
+            <span className="gta-loading-label">
+              {!isDone ? 'LOADING...' : 'STREAM READY'}
+            </span>
+            <span className="gta-loading-sub">
+              {scanProgress < 100
+                ? `INITIALIZING · ${scanProgress}%`
+                : 'LAUNCHING REEL'}
+            </span>
           </div>
         </div>
       </div>
@@ -622,51 +816,65 @@ export default function WatchPlayerPage({ params }: { params: Promise<{ id: stri
             </video>
           )
         ) : (
-          <div className="watch-error-overlay" onClick={(e) => e.stopPropagation()}>
-            <div className="watch-error-card">
-              <span className="modal-gold-tag">
-                <ToggleGoldBadgeIcon size={14} /> Extension Streamer
-              </span>
-              <h3 className="watch-error-title">No Direct Stream Found</h3>
-              <p className="watch-error-copy">{statusMessage}</p>
+          // ── No-source warning banner (slides up from bottom) ────────────────
+          <div className="watch-warn-banner" onClick={(e) => e.stopPropagation()}>
+            {/* Left: icon column */}
+            <div className="wwb-icon-col">
+              <svg className="wwb-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path
+                  d="M12 2L2 20h20L12 2Z"
+                  stroke="currentColor" strokeWidth="1.8"
+                  strokeLinejoin="round" fill="rgba(255,180,0,0.12)"
+                />
+                <path d="M12 9v5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                <circle cx="12" cy="17" r="1" fill="currentColor" />
+              </svg>
+            </div>
 
-              {/* Direct extension alternatives */}
-              {enabledExtensions.filter((e) => e.id !== selectedProviderId).length > 0 && (
-                <div className="watch-alternatives-box">
-                  <span className="alternatives-label">Try another installed extension:</span>
-                  <div className="alternatives-grid">
-                    {enabledExtensions
-                      .filter((e) => e.id !== selectedProviderId)
-                      .map((alt) => (
-                        <button
-                          key={alt.id}
-                          className="filter-pill"
-                          onClick={() => setSelectedProviderId(alt.id)}
-                          type="button"
-                        >
-                          <PuzzleIcon size={14} />
-                          <span>Switch to {alt.name}</span>
-                        </button>
-                      ))}
-                  </div>
-                </div>
-              )}
+            {/* Centre: text + actions */}
+            <div className="wwb-body">
+              <p className="wwb-title">No playable stream found</p>
+              <p className="wwb-msg">{statusMessage}</p>
 
-              <div className="watch-error-actions">
+              <div className="wwb-actions">
+                {/* Try compatible providers */}
+                {scanProviders.filter((e) => e.id !== selectedProviderId).map((alt) => (
+                  <button
+                    key={alt.id}
+                    className="wwb-pill"
+                    onClick={() => setSelectedProviderId(alt.id)}
+                    type="button"
+                  >
+                    <PuzzleIcon size={13} />
+                    <span>{alt.name}</span>
+                  </button>
+                ))}
+
+                <Link href="/providers" className="wwb-pill wwb-pill--outline">
+                  <PuzzleIcon size={13} />
+                  <span>Get extensions</span>
+                </Link>
+
                 <button
-                  className="modal-btn-icon"
+                  className="wwb-pill wwb-pill--ghost"
                   onClick={() => router.back()}
                   type="button"
                 >
-                  <ChevronLeftIcon size={18} />
-                  <span>Go Back</span>
+                  <ChevronLeftIcon size={13} />
+                  <span>Go back</span>
                 </button>
-                <Link href="/providers" className="modal-btn-play">
-                  <PuzzleIcon size={16} />
-                  <span>Open Extensions Page</span>
-                </Link>
               </div>
             </div>
+
+            {/* Right: dismiss */}
+            <button
+              className="wwb-dismiss"
+              onClick={() => setStatusMessage('')}
+              type="button"
+              aria-label="Dismiss warning"
+            >
+              <CloseIcon size={16} />
+            </button>
           </div>
         )}
       </div>

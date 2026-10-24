@@ -102,7 +102,28 @@ function formatTmdbItem(
 
   const rating = raw.adult ? '18+' : voteAvg >= 8.0 ? '16+' : voteAvg >= 7.0 ? '13+' : 'All';
 
-  const duration = isMovie ? '2h 08m' : 'Season 1';
+  const isAnime =
+    ((raw.genre_ids || []).includes(16) || genres.includes('Animation')) &&
+    (raw.original_language === 'ja' || (raw.origin_country || []).includes('JP'));
+
+  let duration = raw.duration;
+  if (!duration) {
+    if (type === 'movie') {
+      if (raw.runtime) {
+        const h = Math.floor(raw.runtime / 60);
+        const m = raw.runtime % 60;
+        duration = h > 0 ? (m > 0 ? `${h}h ${m}m` : `${h}h`) : `${m}m`;
+      } else {
+        duration = '2h 14m';
+      }
+    } else {
+      if (raw.number_of_seasons) {
+        duration = `${raw.number_of_seasons} Season${raw.number_of_seasons > 1 ? 's' : ''}`;
+      } else {
+        duration = 'Season 1';
+      }
+    }
+  }
 
   return {
     id: `${type}-${raw.id}`,
@@ -121,6 +142,7 @@ function formatTmdbItem(
     type,
     rank,
     isOriginal: raw.vote_count > 1000 && Math.random() > 0.5,
+    isAnime,
     matchScore,
     voteAverage: voteAvg,
   };
@@ -407,7 +429,7 @@ export async function getLiveStreamingRows(region: string = 'Pakistan'): Promise
       {
         id: 'anime-animation',
         title: 'Anime & Animation',
-        seeMoreLink: '/tv',
+        seeMoreLink: '/anime',
         cardLayout: 'landscape',
         items: animeItems,
       },
@@ -554,6 +576,133 @@ export async function getLiveTvRows(): Promise<CategoryRow[]> {
     ];
   } catch (error) {
     console.error('Failed to load TV rows:', error);
+    return [];
+  }
+}
+
+/**
+ * Fetch dedicated Anime page rows
+ */
+export async function getLiveAnimeRows(): Promise<CategoryRow[]> {
+  try {
+    const [trending, topRated, actionShonen, movies, fantasy, romance] = await Promise.all([
+      fetchTmdb('/discover/tv', {
+        with_genres: '16',
+        with_original_language: 'ja',
+        sort_by: 'popularity.desc',
+      }),
+      fetchTmdb('/discover/tv', {
+        with_genres: '16',
+        with_original_language: 'ja',
+        sort_by: 'vote_average.desc',
+        'vote_count.gte': '250',
+      }),
+      fetchTmdb('/discover/tv', {
+        with_genres: '16,10759',
+        with_original_language: 'ja',
+        sort_by: 'popularity.desc',
+      }),
+      fetchTmdb('/discover/movie', {
+        with_genres: '16',
+        with_original_language: 'ja',
+        sort_by: 'popularity.desc',
+      }),
+      fetchTmdb('/discover/tv', {
+        with_genres: '16,10765',
+        with_original_language: 'ja',
+        sort_by: 'popularity.desc',
+      }),
+      fetchTmdb('/discover/tv', {
+        with_genres: '16,35',
+        with_original_language: 'ja',
+        sort_by: 'popularity.desc',
+      }),
+    ]);
+
+    return [
+      {
+        id: 'trending-anime',
+        title: 'Trending Anime This Season',
+        cardLayout: 'landscape',
+        items: (trending.results || [])
+          .filter((i: any) => i.backdrop_path)
+          .slice(0, 10)
+          .map((i: any) => formatTmdbItem(i, 'tv', undefined, 'NEW EPISODE')),
+      },
+      {
+        id: 'top-rated-anime',
+        title: 'All-Time Acclaimed Anime Masterpieces',
+        cardLayout: 'landscape',
+        items: (topRated.results || [])
+          .filter((i: any) => i.backdrop_path)
+          .slice(0, 10)
+          .map((i: any) => formatTmdbItem(i, 'tv', undefined, 'MOST LIKED')),
+      },
+      {
+        id: 'action-shonen-anime',
+        title: 'Shonen & Adrenaline Action',
+        cardLayout: 'landscape',
+        items: (actionShonen.results || [])
+          .filter((i: any) => i.backdrop_path)
+          .slice(0, 10)
+          .map((i: any) => formatTmdbItem(i, 'tv', undefined, 'NEW SEASON')),
+      },
+      {
+        id: 'anime-movies',
+        title: 'Top Theatrical Anime Movies',
+        cardLayout: 'landscape',
+        items: (movies.results || [])
+          .filter((i: any) => i.backdrop_path)
+          .slice(0, 10)
+          .map((i: any) => formatTmdbItem(i, 'movie', undefined, 'NEW MOVIE')),
+      },
+      {
+        id: 'fantasy-isekai-anime',
+        title: 'Supernatural, Dark Fantasy & Isekai',
+        cardLayout: 'landscape',
+        items: (fantasy.results || [])
+          .filter((i: any) => i.backdrop_path)
+          .slice(0, 10)
+          .map((i: any) => formatTmdbItem(i, 'tv')),
+      },
+      {
+        id: 'romance-comedy-anime',
+        title: 'Comedy & Slice of Life',
+        cardLayout: 'landscape',
+        items: (romance.results || [])
+          .filter((i: any) => i.backdrop_path)
+          .slice(0, 10)
+          .map((i: any) => formatTmdbItem(i, 'tv')),
+      },
+    ];
+  } catch (error) {
+    console.error('Failed to load Anime rows:', error);
+    return [];
+  }
+}
+
+/**
+ * Search TMDB specifically for Anime
+ */
+export async function searchAnime(query: string): Promise<MediaItem[]> {
+  if (!query.trim()) return [];
+  try {
+    const data = await fetchTmdb('/search/multi', { query });
+    const all = (data.results || []).filter(
+      (i: any) =>
+        (i.media_type === 'movie' || i.media_type === 'tv') &&
+        (i.backdrop_path || i.poster_path)
+    );
+    const animeFiltered = all.filter(
+      (i: any) =>
+        (i.genre_ids || []).includes(16) ||
+        i.original_language === 'ja' ||
+        (i.origin_country || []).includes('JP')
+    );
+    const results = animeFiltered.length > 0 ? animeFiltered : all;
+    return results.slice(0, 18).map((i: any) => formatTmdbItem(i));
+  } catch (error) {
+    console.error('Failed to search anime:', error);
     return [];
   }
 }
@@ -929,6 +1078,7 @@ const DUPAHIYA_DETAILS: FullMediaDetail = {
   year: 2026,
   duration: '2 seasons',
   rating: '13+',
+  voteAverage: 8.4,
   imdbRating: '8.4/10',
   genres: ['Comedy', 'Drama'],
   cast: [
@@ -1041,6 +1191,7 @@ export async function getFullMediaDetails(id: string): Promise<FullMediaDetail> 
       year: releaseYear,
       duration,
       rating: '13+',
+      voteAverage: typeof data.vote_average === 'number' ? data.vote_average : 7.5,
       imdbRating: imdb,
       genres: data.genres?.length ? data.genres.map((g: any) => g.name) : ['Comedy', 'Drama'],
       cast: cast.length ? cast : DUPAHIYA_DETAILS.cast,
@@ -1054,6 +1205,11 @@ export async function getFullMediaDetails(id: string): Promise<FullMediaDetail> 
       recommendations: recs.length ? recs : DUPAHIYA_RECOMMENDATIONS,
       type: rawType,
       isOriginal: true,
+      isAnime:
+        (data.genres || []).some(
+          (g: any) => g.id === 16 || g.name?.toLowerCase() === 'animation'
+        ) &&
+        (data.original_language === 'ja' || (data.origin_country || []).includes('JP')),
       seasonsCount: data.number_of_seasons || 1,
       currentSeason: 1,
       episodes: episodes.length ? episodes : DUPAHIYA_EPISODES,

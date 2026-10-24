@@ -7057,8 +7057,8 @@ a {
 }
 
 .source-menu-row.active {
-  background: rgba(0, 168, 225, 0.15);
-  color: var(--accent);
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
 }
 
 .source-menu-left {
@@ -7083,7 +7083,7 @@ a {
 }
 
 .source-active-check {
-  color: var(--accent);
+  color: #ffffff;
   display: flex;
   align-items: center;
 }
@@ -7108,7 +7108,7 @@ a {
   align-items: center;
   gap: 0.45rem;
   font-size: 0.8rem;
-  color: var(--accent);
+  color: #ffffff;
   padding: 0.4rem 0.65rem;
   font-weight: 700;
   text-decoration: none;
@@ -7117,7 +7117,7 @@ a {
 }
 
 .source-manage-link:hover {
-  background: rgba(0, 168, 225, 0.1);
+  background: rgba(255, 255, 255, 0.1);
   text-decoration: none;
 }
 
@@ -7646,6 +7646,169 @@ a {
   align-items: center;
   gap: 0.85rem;
   margin-top: 1rem;
+}
+
+
+/* ══════════════════════════════════════════════════════
+   WARNING BANNER — slides up from bottom when no source found
+   (non-intrusive; player chrome stays visible behind it)
+   ══════════════════════════════════════════════════════ */
+.watch-warn-banner {
+  position: absolute;
+  bottom: 96px; /* sit above the bottom controls bar */
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(720px, calc(100vw - 2.5rem));
+  background: rgba(12, 16, 26, 0.92);
+  backdrop-filter: blur(22px) saturate(1.4);
+  -webkit-backdrop-filter: blur(22px) saturate(1.4);
+  border: 1px solid rgba(255, 180, 0, 0.28);
+  border-radius: 14px;
+  padding: 1.1rem 1.3rem 1.1rem 1.15rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  z-index: 80;
+  box-shadow:
+    0 8px 40px rgba(0, 0, 0, 0.72),
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+  animation: wwbSlideUp 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes wwbSlideUp {
+  from { opacity: 0; transform: translateX(-50%) translateY(28px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* Left icon */
+.wwb-icon-col {
+  flex-shrink: 0;
+  padding-top: 0.1rem;
+}
+
+.wwb-icon {
+  width: 22px;
+  height: 22px;
+  color: #f0a800;
+  display: block;
+}
+
+/* Centre body */
+.wwb-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.32rem;
+}
+
+.wwb-title {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+
+.wwb-msg {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+/* Action pills row */
+.wwb-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+  align-items: center;
+}
+
+.wwb-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.32rem 0.75rem;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.16s ease, border-color 0.16s ease, opacity 0.16s ease;
+  /* default: amber-tinted filled */
+  background: rgba(240, 168, 0, 0.18);
+  border: 1px solid rgba(240, 168, 0, 0.45);
+  color: #f0c040;
+}
+
+.wwb-pill:hover {
+  background: rgba(240, 168, 0, 0.3);
+  border-color: rgba(240, 168, 0, 0.75);
+}
+
+/* Outline variant — "Get extensions" */
+.wwb-pill--outline {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+}
+
+.wwb-pill--outline:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+/* Ghost variant — "Go back" */
+.wwb-pill--ghost {
+  background: transparent;
+  border: 1px solid transparent;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.wwb-pill--ghost:hover {
+  color: rgba(255, 255, 255, 0.75);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Right dismiss button */
+.wwb-dismiss {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  align-self: flex-start;
+}
+
+.wwb-dismiss:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+}
+
+/* Compact layout on small screens */
+@media (max-width: 540px) {
+  .watch-warn-banner {
+    bottom: 82px;
+    border-radius: 10px;
+    padding: 0.9rem 1rem;
+  }
+
+  .wwb-title { font-size: 0.84rem; }
+  .wwb-msg   { font-size: 0.74rem; }
+  .wwb-pill  { font-size: 0.71rem; padding: 0.26rem 0.6rem; }
 }
 
 /* ══════════════════════════════════════════════════════
@@ -9076,6 +9239,11 @@ a {
    PRIME VIDEO STYLE WATCH LOADING SCREEN
    ========================================================================== */
 
+/* ==========================================================================
+   GTA 5 Cinematic Loading Screen
+   ========================================================================== */
+
+.gta-loading-screen,
 .pv-loading-screen {
   position: fixed;
   inset: 0;
@@ -9083,262 +9251,227 @@ a {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #000000;
+  background: #03060a;
   overflow: hidden;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Amazon Ember", sans-serif;
+  font-family: var(--font-outfit), Impact, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  user-select: none;
 }
 
-.pv-ls-backdrop {
+/* Fullscreen Ken-Burns slow-panning cinematic art */
+.gta-ls-art-layer {
   position: absolute;
-  inset: -40px;
+  inset: -60px;
   background-image: var(--pv-bg, none);
   background-size: cover;
-  background-position: center 25%;
+  background-position: center 30%;
   background-repeat: no-repeat;
-  filter: blur(48px) saturate(1.2) brightness(0.28);
-  transform: scale(1.1);
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0.85;
-}
-
-.pv-ls-scrim {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(ellipse at 50% 50%, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.9) 75%, #000000 100%),
-    linear-gradient(180deg, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.95) 100%);
+  filter: brightness(0.55) contrast(1.18) saturate(1.22);
+  animation: gtaKenBurns 28s ease-in-out infinite alternate;
   pointer-events: none;
   z-index: 1;
+  transform-origin: center center;
+  will-change: transform;
 }
 
-/* Floating Prime-style back button */
-.pv-ls-back {
-  position: absolute;
-  top: 1.75rem;
-  left: 2rem;
-  z-index: 20;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.65);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  color: #ffffff;
-  cursor: pointer;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  transition: all 0.18s ease;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+.gta-ls-art-layer.gta-initial-bg {
+  background: radial-gradient(circle at 30% 40%, #151e2e 0%, #070b12 70%, #020408 100%);
 }
 
-.pv-ls-back:hover {
-  background: rgba(255, 255, 255, 0.18);
-  border-color: rgba(255, 255, 255, 0.45);
-  transform: scale(1.05);
-}
-
-.pv-ls-back:active {
-  transform: scale(0.96);
-}
-
-/* Prime Video Info Card */
-.pv-ls-card {
-  position: relative;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  gap: 2rem;
-  max-width: 720px;
-  width: min(90vw, 720px);
-  padding: 2rem 2.25rem;
-  background: rgba(15, 23, 42, 0.92);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 8px;
-  box-shadow: 0 24px 64px -12px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  animation: pvCardFadeUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-/* Sharp Prime-style poster */
-.pv-ls-poster {
-  width: 130px;
-  min-width: 130px;
-  aspect-ratio: 2 / 3;
-  border-radius: 6px;
-  object-fit: cover;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.1);
-  flex-shrink: 0;
-}
-
-.pv-ls-meta {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-/* Prime Video Gold Brand */
-.pv-ls-brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  color: #ffb800;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  margin-bottom: 0.45rem;
-}
-
-.pv-ls-title {
-  font-size: clamp(1.4rem, 2.8vw, 1.9rem);
-  font-weight: 700;
-  color: #ffffff;
-  margin: 0 0 0.3rem;
-  line-height: 1.2;
-  letter-spacing: -0.01em;
-}
-
-.pv-ls-ep {
-  font-size: 0.9rem;
-  color: #8197a4;
-  margin: 0 0 0.75rem;
-  font-weight: 500;
-}
-
-/* Rectangular Prime-style metadata tags */
-.pv-ls-tags {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  margin-bottom: 1.25rem;
-  flex-wrap: wrap;
-}
-
-.pv-ls-tag {
-  font-size: 0.68rem;
-  font-weight: 700;
-  color: #cbd5e1;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  padding: 0.15rem 0.45rem;
-  border-radius: 3px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-/* Signature Prime Video Scrubber Progress Track */
-.pv-ls-bar-track {
-  width: 100%;
-  height: 3px;
-  background: rgba(255, 255, 255, 0.18);
-  border-radius: 2px;
-  overflow: hidden;
-  margin-bottom: 0.85rem;
-  position: relative;
-}
-
-.pv-ls-bar-fill {
-  height: 100%;
-  background: #00a8e1;
-  border-radius: 2px;
-  transition: width 0.28s cubic-bezier(0.2, 0, 0, 1);
-  box-shadow: 0 0 10px rgba(0, 168, 225, 0.85);
-}
-
-.pv-ls-status-row {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  margin-bottom: 0.85rem;
-  min-height: 20px;
-}
-
-/* Crisp Prime Spinner */
-.pv-ls-spinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.16);
-  border-top-color: #00a8e1;
-  border-radius: 50%;
-  animation: pvSpinnerRotate 0.7s linear infinite;
-  flex-shrink: 0;
-}
-
-.pv-ls-status-text {
-  font-size: 0.84rem;
-  color: #8197a4;
-  font-weight: 500;
-  letter-spacing: 0.01em;
-}
-
-.pv-ls-status-text.pv-ls-ok {
-  color: #00a8e1;
-  font-weight: 600;
-}
-
-.pv-ls-status-text.pv-ls-failed {
-  color: #f87171;
-  font-weight: 600;
-}
-
-.pv-ls-pips {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  flex-wrap: wrap;
-  margin-top: 0.15rem;
-}
-
-.pv-ls-pip {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  transition: all 0.25s ease;
-}
-
-.pv-ls-pip.pending {
-  background: rgba(255, 255, 255, 0.16);
-  transform: scale(1);
-}
-
-.pv-ls-pip.done {
-  background: #00a8e1;
-  box-shadow: 0 0 6px rgba(0, 168, 225, 0.6);
-}
-
-.pv-ls-pip.winner {
-  background: #22c55e;
-  box-shadow: 0 0 10px rgba(34, 197, 94, 0.9);
-  transform: scale(1.35);
-}
-
-/* Minimalist Ring Loader */
-.pv-loader-ring {
-  width: 44px;
-  height: 44px;
-  border: 3px solid rgba(255, 255, 255, 0.14);
-  border-top-color: #00a8e1;
-  border-radius: 50%;
-  animation: pvSpinnerRotate 0.8s cubic-bezier(0.5, 0, 0.5, 1) infinite;
-  position: relative;
-  z-index: 10;
-}
-
-@keyframes pvSpinnerRotate {
-  to {
-    transform: rotate(360deg);
+@keyframes gtaKenBurns {
+  0% {
+    transform: scale(1.02) translate(0%, 0%);
+  }
+  50% {
+    transform: scale(1.08) translate(-1.8%, -1.2%);
+  }
+  100% {
+    transform: scale(1.04) translate(1.4%, 0.8%);
   }
 }
 
-@keyframes pvCardFadeUp {
+/* Authentic Rockstar GTA-style dark radial vignette and horizon scrims */
+.gta-ls-vignette {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 50% 50%, rgba(0, 0, 0, 0.12) 30%, rgba(0, 0, 0, 0.65) 72%, rgba(2, 4, 8, 0.98) 100%),
+    linear-gradient(to top, rgba(2, 4, 8, 0.96) 0%, rgba(2, 4, 8, 0.65) 28%, transparent 58%),
+    linear-gradient(to bottom, rgba(2, 4, 8, 0.88) 0%, rgba(2, 4, 8, 0.4) 14%, transparent 30%);
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Subtle retro film scanlines */
+.gta-ls-scanlines {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.28) 50%);
+  background-size: 100% 4px;
+  pointer-events: none;
+  z-index: 3;
+  opacity: 0.35;
+}
+
+/* Top HUD bar */
+.gta-ls-top-bar {
+  position: absolute;
+  top: 2.25rem;
+  left: 3rem;
+  right: 3rem;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Game Console / Keyboard Return Button */
+.gta-ls-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: rgba(8, 12, 18, 0.75);
+  border: 1.5px solid rgba(255, 255, 255, 0.28);
+  padding: 0.45rem 1.15rem 0.45rem 0.6rem;
+  border-radius: 4px;
+  color: #ffffff;
+  cursor: pointer;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.75);
+}
+
+.gta-ls-back-btn:hover {
+  background: rgba(245, 158, 11, 0.18);
+  border-color: #f59e0b;
+  transform: scale(1.03);
+  color: #fbbf24;
+  box-shadow: 0 4px 24px rgba(245, 158, 11, 0.3);
+}
+
+.gta-ls-back-btn:active {
+  transform: scale(0.97);
+}
+
+.gta-key-pill {
+  background: #ffffff;
+  color: #05070a;
+  font-size: 0.72rem;
+  font-weight: 900;
+  padding: 0.15rem 0.45rem;
+  border-radius: 3px;
+  letter-spacing: 0.06em;
+  font-family: monospace, sans-serif;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+}
+
+.gta-back-text {
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.gta-ls-top-right {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+/* GTA Wanted Stars / Movie Rating */
+.gta-wanted-stars {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 1.45rem;
+  color: rgba(255, 255, 255, 0.18);
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.9));
+}
+
+.gta-star.active {
+  color: #f59e0b;
+  text-shadow: 0 0 14px rgba(245, 158, 11, 0.9), 0 0 2px #fff;
+  animation: gtaStarGlow 2.5s ease-in-out infinite alternate;
+}
+
+@keyframes gtaStarGlow {
+  0% {
+    filter: brightness(1);
+  }
+  100% {
+    filter: brightness(1.25);
+  }
+}
+
+/* GTA V Style Logo Badge */
+.gta-emblem-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  background: rgba(4, 7, 12, 0.85);
+  border: 1.5px solid rgba(255, 255, 255, 0.32);
+  padding: 0.35rem 0.85rem;
+  border-radius: 4px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.gta-emblem-tea {
+  font-size: 0.95rem;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: 0.14em;
+}
+
+.gta-emblem-v {
+  font-size: 1.45rem;
+  font-weight: 900;
+  color: #22c55e;
+  font-style: italic;
+  line-height: 1;
+  text-shadow: 0 0 12px rgba(34, 197, 94, 0.8), 2px 2px 0 #000;
+  font-family: Georgia, "Times New Roman", serif;
+  margin-left: 0.05rem;
+}
+
+.gta-emblem-sub {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #f59e0b;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-left: 0.4rem;
+  border-left: 1px solid rgba(255, 255, 255, 0.25);
+  padding-left: 0.45rem;
+}
+
+/* Main Content Grid */
+.gta-ls-content-grid {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 4.5rem 3.5rem 3.5rem 3.5rem;
+  box-sizing: border-box;
+  gap: 3.5rem;
+}
+
+/* Left Dossier */
+.gta-ls-dossier {
+  max-width: 680px;
+  flex: 1;
+  min-width: 0;
+  animation: gtaDossierFade 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes gtaDossierFade {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
@@ -9346,24 +9479,442 @@ a {
   }
 }
 
-@media (max-width: 640px) {
-  .pv-ls-card {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1.25rem;
-    padding: 1.5rem;
-    border-radius: 8px;
+.gta-ls-brand-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.4rem;
+}
+
+.gta-badge-pill {
+  background: #f59e0b;
+  color: #030508;
+  font-size: 0.74rem;
+  font-weight: 900;
+  padding: 0.22rem 0.6rem;
+  border-radius: 3px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.5);
+}
+
+.gta-badge-type {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.78);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+/* Massive GTA Stylized Title */
+.gta-ls-title {
+  font-size: clamp(2.3rem, 4.5vw, 4rem);
+  font-weight: 900;
+  color: #ffffff;
+  text-transform: uppercase;
+  line-height: 1.04;
+  margin: 0.4rem 0 0.5rem;
+  letter-spacing: -0.01em;
+  text-shadow: 0 4px 24px rgba(0, 0, 0, 0.95), 2px 3px 0 #000000;
+}
+
+.gta-ls-ep-badge {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #fbbf24;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0 0 0.65rem;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.85);
+}
+
+/* Military / Game HUD Brackets */
+.gta-ls-hud-tags {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.35rem;
+}
+
+.gta-hud-tag {
+  font-size: 0.74rem;
+  font-weight: 800;
+  color: #e2e8f0;
+  background: rgba(3, 6, 12, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  padding: 0.18rem 0.55rem;
+  border-radius: 2px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-family: monospace, sans-serif;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+
+.gta-hud-tag.gold {
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.65);
+  background: rgba(245, 158, 11, 0.16);
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.25);
+}
+
+/* GTA 5 Cycling Hints Box */
+.gta-ls-hint-box {
+  background: rgba(4, 7, 12, 0.82);
+  border-left: 4px solid #f59e0b;
+  padding: 1.1rem 1.4rem;
+  border-radius: 0 4px 4px 0;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  margin-bottom: 1.4rem;
+  max-width: 620px;
+  min-height: 76px;
+  box-sizing: border-box;
+}
+
+.gta-hint-header {
+  font-size: 0.76rem;
+  font-weight: 900;
+  color: #f59e0b;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  margin-bottom: 0.35rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.gta-hint-icon {
+  font-size: 0.95rem;
+}
+
+.gta-hint-text {
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: #e2e8f0;
+  line-height: 1.45;
+  margin: 0;
+  letter-spacing: 0.01em;
+  animation: gtaHintFade 0.4s ease-out;
+}
+
+@keyframes gtaHintFade {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Scanner / Mission Progress Block */
+.gta-ls-progress-block {
+  background: rgba(4, 7, 12, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 4px;
+  padding: 1.15rem 1.4rem;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  max-width: 620px;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.8);
+}
+
+.gta-progress-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.65rem;
+}
+
+.gta-progress-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: #94a3b8;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.gta-step-highlight {
+  color: #38bdf8;
+  font-weight: 900;
+}
+
+.gta-step-highlight.gold {
+  color: #22c55e;
+}
+
+.gta-step-highlight.failed {
+  color: #ef4444;
+}
+
+.gta-progress-pct {
+  font-size: 0.85rem;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: 0.08em;
+  font-family: monospace, sans-serif;
+}
+
+.gta-pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #38bdf8;
+  box-shadow: 0 0 10px #38bdf8;
+  animation: gtaPulse 1s ease-in-out infinite alternate;
+  flex-shrink: 0;
+}
+
+@keyframes gtaPulse {
+  from {
+    opacity: 0.35;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+.gta-bar-track {
+  width: 100%;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 0.85rem;
+  position: relative;
+}
+
+.gta-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #0284c7, #38bdf8);
+  border-radius: 2px;
+  transition: width 0.3s cubic-bezier(0.2, 0, 0, 1);
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.9);
+}
+
+.gta-provider-radar {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.gta-radar-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  padding: 0.2rem 0.55rem;
+  border-radius: 3px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #cbd5e1;
+  letter-spacing: 0.06em;
+  transition: all 0.25s ease;
+}
+
+.gta-radar-chip.scanning {
+  border-color: rgba(56, 189, 248, 0.4);
+  color: #e2e8f0;
+}
+
+.gta-radar-chip.done {
+  border-color: rgba(56, 189, 248, 0.8);
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+}
+
+.gta-radar-chip.winner {
+  border-color: #22c55e;
+  background: rgba(34, 197, 94, 0.2);
+  color: #4ade80;
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.4);
+}
+
+.gta-radar-blip {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.gta-radar-name {
+  text-transform: uppercase;
+}
+
+/* Right Poster Frame (GTA Character Artwork Card) */
+.gta-ls-poster-container {
+  flex-shrink: 0;
+  margin-bottom: 1.5rem;
+  margin-right: 2rem;
+}
+
+.gta-ls-poster-frame {
+  position: relative;
+  width: 220px;
+  aspect-ratio: 2 / 3;
+  border: 3.5px solid rgba(255, 255, 255, 0.9);
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.95),
+    0 0 30px rgba(245, 158, 11, 0.25);
+  transform: rotate(2deg);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.gta-ls-poster-frame:hover {
+  transform: rotate(0deg) scale(1.03);
+}
+
+.gta-ls-poster-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  filter: contrast(1.1) saturate(1.18);
+}
+
+.gta-ls-poster-stamp {
+  position: absolute;
+  bottom: 0.5rem;
+  right: 0.5rem;
+  background: #f59e0b;
+  color: #030508;
+  font-size: 0.65rem;
+  font-weight: 900;
+  padding: 0.15rem 0.45rem;
+  border-radius: 2px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+}
+
+/* Iconic GTA V Bottom-Right Spinner */
+.gta-ls-bottom-right {
+  position: absolute;
+  bottom: 2.75rem;
+  right: 3rem;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: rgba(3, 6, 12, 0.82);
+  padding: 0.75rem 1.25rem 0.75rem 0.95rem;
+  border-radius: 4px;
+  border: 1.5px solid rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.9);
+}
+
+.gta-spinner-wrap {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gta-spinner-svg {
+  width: 100%;
+  height: 100%;
+  animation: gtaSpinnerRotate 0.9s linear infinite;
+}
+
+@keyframes gtaSpinnerRotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.gta-loading-meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.gta-loading-label {
+  font-size: 1.1rem;
+  font-weight: 900;
+  letter-spacing: 0.2em;
+  color: #ffffff;
+  text-transform: uppercase;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
+  line-height: 1.1;
+}
+
+.gta-loading-sub {
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #f59e0b;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  margin-top: 0.2rem;
+}
+
+/* Fallback loader ring for minimal contexts */
+.pv-loader-ring {
+  width: 44px;
+  height: 44px;
+  border: 3.5px solid rgba(255, 255, 255, 0.18);
+  border-top-color: #f59e0b;
+  border-radius: 50%;
+  animation: gtaSpinnerRotate 0.8s linear infinite;
+  position: relative;
+  z-index: 10;
+}
+
+/* Responsiveness */
+@media (max-width: 900px) {
+  .gta-ls-poster-container {
+    display: none;
   }
 
-  .pv-ls-poster {
-    width: 90px;
-    min-width: 90px;
+  .gta-ls-content-grid {
+    padding: 5.5rem 1.75rem 6.5rem 1.75rem;
   }
 
-  .pv-ls-back {
-    top: 1.25rem;
-    left: 1.25rem;
-    width: 38px;
-    height: 38px;
+  .gta-ls-top-bar {
+    top: 1.5rem;
+    left: 1.75rem;
+    right: 1.75rem;
+  }
+
+  .gta-wanted-stars {
+    display: none;
+  }
+
+  .gta-ls-bottom-right {
+    bottom: 1.5rem;
+    right: 1.75rem;
+  }
+}
+
+@media (max-width: 560px) {
+  .gta-ls-title {
+    font-size: 2rem;
+  }
+
+  .gta-ls-bottom-right {
+    padding: 0.5rem 0.85rem;
+  }
+
+  .gta-spinner-wrap {
+    width: 28px;
+    height: 28px;
+  }
+
+  .gta-loading-label {
+    font-size: 0.9rem;
   }
 }

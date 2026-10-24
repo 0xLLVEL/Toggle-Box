@@ -149,6 +149,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     { href: '/', label: 'Home' },
     { href: '/movies', label: 'Movies' },
     { href: '/tv', label: 'TV Shows' },
+    { href: '/anime', label: 'Anime' },
   ];
 
   return (

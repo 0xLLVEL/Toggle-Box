@@ -25,6 +25,7 @@ export interface MediaItem {
   type: 'movie' | 'tv';
   rank?: number; // For Top 10 row
   isOriginal?: boolean;
+  isAnime?: boolean;
   matchScore?: number; // e.g. 96%
   voteAverage?: number;
   trailerKey?: string;
@@ -73,9 +74,11 @@ export interface FullMediaDetail {
   type: 'movie' | 'tv';
   rankPakistan?: number;
   isOriginal?: boolean;
+  isAnime?: boolean;
   episodes?: EpisodeItem[];
   seasonsCount?: number;
   currentSeason?: number;
+  voteAverage?: number;
 }
 
 export interface CategoryRow {
